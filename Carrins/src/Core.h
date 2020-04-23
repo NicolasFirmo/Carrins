@@ -1,7 +1,7 @@
 #pragma once
-#include "UtilityMacros.h"
+#include "Utility/UtilityMacros.h"
 
-const char* glsl_version = "#version 410";
+static constexpr const char* glsl_version = "#version 410";
 
 #if defined(PLATFORM_WINDOWS)
 	#define MAIN() CALLBACK WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,int nCmdShow)
@@ -26,9 +26,7 @@ const char* glsl_version = "#version 410";
 #endif
 
 #ifndef NDEBUG
-	#define ASSERT(x,s) if(!(x)){ DebugLog("ASSERTION FALIED: " << s << "\nLINE: " << __LINE__ << "\nFILE: " << __FILE__ << '\n'); DEBUG_BREAK();}
-	#define GLCall(x) while(glGetError()); x; while(auto error = glGetError())ASSERT(false, "[OpenGL error] (0x0" << std::hex << error << std::dec << "): " << #x)
+	#define NIC_ASSERT(x,s) if(!(x)){ DebugLog("ASSERTION FALIED: " << s << "\nLINE: " << __LINE__ << "\nFILE: " << __FILE__ << '\n'); DEBUG_BREAK();}
 #else
-	#define ASSERT(x,s)
-	#define GLCall(x) x
+	#define NIC_ASSERT(x,s) x
 #endif

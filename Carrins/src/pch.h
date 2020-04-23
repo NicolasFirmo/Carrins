@@ -1,7 +1,9 @@
 #include <iostream>
+#include <type_traits>
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <memory>
 
 #include <vector>
 #include <map>
