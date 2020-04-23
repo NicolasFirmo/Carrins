@@ -21,7 +21,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE GLFW_INCLUDE_NONE)
 
 if(WIN32)
 	target_compile_definitions(${PROJECT_NAME} PRIVATE PLATFORM_WINDOWS)
-	set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "${LINK_FLAGS } /SUBSYSTEM:WINDOWS")
+	set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "${LINK_FLAGS} /SUBSYSTEM:WINDOWS")
 endif(WIN32)
 if(UNIX)
 	target_compile_definitions(${PROJECT_NAME} PRIVATE PLATFORM_LINUX)

@@ -8,6 +8,10 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#ifdef PLATFORM_LINUX
+#include <signal.h>
+#endif // PLATFORM_LINUX
+
 #ifdef PLATFORM_WINDOWS
 // Slim Windows
 
@@ -69,4 +73,4 @@
 
 #include <Windows.h>
 
-#endif
+#endif // PLATFORM_WINDOWS
