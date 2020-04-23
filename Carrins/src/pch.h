@@ -9,7 +9,9 @@
 #include <unordered_set>
 
 #ifdef PLATFORM_LINUX
+	#ifndef NDEBUG
 #include <signal.h>
+	#endif // NDEBUG
 #endif // PLATFORM_LINUX
 
 #ifdef PLATFORM_WINDOWS

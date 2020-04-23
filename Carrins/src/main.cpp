@@ -26,7 +26,7 @@ struct
 
 int MAIN()
 {
-	GLFWwindow* window;
+	GLFWwindow *window;
 
 	/* Initialize the library */
 	if (!glfwInit())
@@ -35,10 +35,9 @@ int MAIN()
 		return -1;
 	}
 
-	glfwSetErrorCallback([](int code, const char* msg) {
+	glfwSetErrorCallback([](int code, const char *msg) {
 		DebugLog("GLFW ERROR " << code << ": " << msg << '\n');
-		}
-	);
+	});
 
 	/* Set windows hints */
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -64,13 +63,13 @@ int MAIN()
 		return -1;
 	}
 
-	DebugLog(glGetString(GL_VERSION));
+	DebugLog(glGetString(GL_VERSION) << '\n');
 
-	glfwSetWindowTitle(window, reinterpret_cast<const char*>(glGetString(GL_VERSION)));
+	glfwSetWindowTitle(window, reinterpret_cast<const char *>(glGetString(GL_VERSION)));
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO();
+	ImGuiIO &io = ImGui::GetIO();
 	(void)io;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
 	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
@@ -84,7 +83,7 @@ int MAIN()
 	//ImGui::StyleColorsClassic();
 
 	// When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
-	ImGuiStyle& style = ImGui::GetStyle();
+	ImGuiStyle &style = ImGui::GetStyle();
 	if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 	{
 		style.WindowRounding = 0.0f;
@@ -94,8 +93,8 @@ int MAIN()
 	ImGui_ImplOpenGL3_Init(glsl_version);
 
 	GLuint va;
-	glGenVertexArrays(1, &va);
-	glBindVertexArray(va);
+	GLCall(glGenVertexArrays(1, &va));
+	GLCall(glBindVertexArray(va));
 
 	struct Vertex
 	{
@@ -121,26 +120,26 @@ int MAIN()
 			{
 					-0.5f,
 					0.5f,
-			} };
+			}};
 
 	GLuint vb;
-	glGenBuffers(1, &vb);
-	glBindBuffer(GL_ARRAY_BUFFER, vb);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	GLCall(glGenBuffers(1, &vb));
+	GLCall(glBindBuffer(GL_ARRAY_BUFFER, vb));
+	GLCall(glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW));
 
-	glEnableVertexAttribArray(0); // enable first atrib of the vertex
-	glVertexAttribPointer(0, sizeof(Vertex::Pos) / sizeof(float), GL_FLOAT, GL_FALSE,
-		sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, Vertex::Pos)));
+	GLCall(glEnableVertexAttribArray(0)); // enable first atrib of the vertex
+	GLCall(glVertexAttribPointer(0, sizeof(Vertex::Pos) / sizeof(float), GL_FLOAT, GL_FALSE,
+															 sizeof(Vertex), reinterpret_cast<void *>(offsetof(Vertex, Vertex::Pos))));
 
 	const unsigned indices[] = {
-			0, 1, 2, 2, 3, 0 };
+			0, 1, 2, 2, 3, 0};
 
 	GLuint ib;
-	glGenBuffers(1, &ib);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+	GLCall(glGenBuffers(1, &ib));
+	GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib));
+	GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW));
 
-	glClearColor(s_ClearColor.r, s_ClearColor.g, s_ClearColor.b, s_ClearColor.a);
+	GLCall(glClearColor(s_ClearColor.r, s_ClearColor.g, s_ClearColor.b, s_ClearColor.a));
 	/* Loop until the user closes the window */
 	while (!glfwWindowShouldClose(window))
 	{
@@ -148,7 +147,7 @@ int MAIN()
 		glfwPollEvents();
 
 		/* Render here */
-		glClear(GL_COLOR_BUFFER_BIT);
+		GLCall(glClear(GL_COLOR_BUFFER_BIT));
 
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
@@ -164,7 +163,7 @@ int MAIN()
 		ImGui::Text("textão");
 		ImGui::End();
 
-		glDrawElements(GL_TRIANGLES, std::size(indices), GL_UNSIGNED_INT, nullptr);
+		GLCall(glDrawElements(GL_TRIANGLES, std::size(indices), GL_UNSIGNED_INT, nullptr));
 
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -174,7 +173,7 @@ int MAIN()
 		//  For this specific demo app we could also call glfwMakeContextCurrent(window) directly)
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 		{
-			GLFWwindow* backup_current_context = glfwGetCurrentContext();
+			GLFWwindow *backup_current_context = glfwGetCurrentContext();
 			ImGui::UpdatePlatformWindows();
 			ImGui::RenderPlatformWindowsDefault();
 			glfwMakeContextCurrent(backup_current_context);
@@ -185,8 +184,8 @@ int MAIN()
 	}
 
 	// Cleanup
-	glDeleteBuffers(1, &vb);
-	glDeleteBuffers(1, &ib);
+	GLCall(glDeleteBuffers(1, &vb));
+	GLCall(glDeleteBuffers(1, &ib));
 
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
