@@ -1,0 +1,8 @@
+mkdir ../DebugBuild
+mkdir ../ReleaseBuild
+cd ../DebugBuild
+cmake -DCMAKE_BUILD_TYPE=Debug ..
+make -j4
+cd ../ReleaseBuild
+cmake -DCMAKE_BUILD_TYPE=Release ..
+make -j4
