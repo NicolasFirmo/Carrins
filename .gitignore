@@ -2,6 +2,15 @@
 DebugBuild/
 ReleaseBuild/
 .vscode/
+.vs/
+CMakeFiles/
+*.dir/
+**/Debug
+**/Release
 
 # files
+*.cmake
 imgui.ini
+*.vcxproj*
+*.sln
+CMakeCache.txt
