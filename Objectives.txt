@@ -1,0 +1,8 @@
+Dirt 3 like mixed with generally handling
+low poly but pretty
+Lots of particles and props (flying cones, dirt and stuff)
+Very dynamic tracks:
+	Breckable fences
+	deformable mud
+	time and weather
+	did I mention like 1000 flying cones and tires?

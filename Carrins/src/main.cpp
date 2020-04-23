@@ -1,13 +1,13 @@
 #include <glad/glad.h>
+#include <GLFW/glfw3.h>
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
-#include <GLFW/glfw3.h>
 
-const char* glsl_version = "#version 410";
+const char *glsl_version = "#version 410";
 
 #ifndef NDEBUG
-static constexpr const char* s_WindowTitle = "DEBUG";
+static constexpr const char *s_WindowTitle = "DEBUG";
 struct
 {
 	float r = 0.0f;
@@ -16,7 +16,7 @@ struct
 	float a = 1.0f;
 } static s_ClearColor;
 #else
-static constexpr const char* s_WindowTitle = "NDEBUG";
+static constexpr const char *s_WindowTitle = "NDEBUG";
 struct
 {
 	float r = 1.0f;
@@ -27,21 +27,24 @@ struct
 #endif
 
 #ifndef PLATFORM_WINDOWS
+#define DebugLog(x) std::cout << x << '\n'
 int main()
 #else
+#define DebugLog(x) OutputDebugString(x)
 int CALLBACK WinMain(
-	HINSTANCE   hInstance,
-	HINSTANCE   hPrevInstance,
-	LPSTR       lpCmdLine,
-	int         nCmdShow
-)
+		HINSTANCE hInstance,
+		HINSTANCE hPrevInstance,
+		LPSTR lpCmdLine,
+		int nCmdShow)
 #endif
 {
-	GLFWwindow* window;
+	GLFWwindow *window;
 
 	/* Initialize the library */
 	if (!glfwInit())
 		return -1;
+
+	// TODO: glfwSetErrorCallback(my error callback);
 
 	/* Set windows hints */
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -63,9 +66,11 @@ int CALLBACK WinMain(
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 		return -1;
 
+	DebugLog(glGetString(GL_VERSION));
+
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO();
+	ImGuiIO &io = ImGui::GetIO();
 	(void)io;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
 	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
@@ -79,7 +84,7 @@ int CALLBACK WinMain(
 	//ImGui::StyleColorsClassic();
 
 	// When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
-	ImGuiStyle& style = ImGui::GetStyle();
+	ImGuiStyle &style = ImGui::GetStyle();
 	if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 	{
 		style.WindowRounding = 0.0f;
@@ -116,7 +121,7 @@ int CALLBACK WinMain(
 			{
 					-0.5f,
 					0.5f,
-			} };
+			}};
 
 	GLuint vb;
 	glGenBuffers(1, &vb);
@@ -125,10 +130,10 @@ int CALLBACK WinMain(
 
 	glEnableVertexAttribArray(0); // enable first atrib of the vertex
 	glVertexAttribPointer(0, sizeof(Vertex::Pos) / sizeof(float), GL_FLOAT, GL_FALSE,
-		sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, Vertex::Pos)));
+												sizeof(Vertex), reinterpret_cast<void *>(offsetof(Vertex, Vertex::Pos)));
 
 	const unsigned indices[] = {
-			0, 1, 2, 2, 3, 0 };
+			0, 1, 2, 2, 3, 0};
 
 	GLuint ib;
 	glGenBuffers(1, &ib);
@@ -156,7 +161,7 @@ int CALLBACK WinMain(
 		ImGui::End();
 
 		ImGui::Begin("Test2");
-		ImGui::Text("Texto de teste2");
+		ImGui::Text("textão");
 		ImGui::End();
 
 		glDrawElements(GL_TRIANGLES, std::size(indices), GL_UNSIGNED_INT, nullptr);
@@ -169,7 +174,7 @@ int CALLBACK WinMain(
 		//  For this specific demo app we could also call glfwMakeContextCurrent(window) directly)
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 		{
-			GLFWwindow* backup_current_context = glfwGetCurrentContext();
+			GLFWwindow *backup_current_context = glfwGetCurrentContext();
 			ImGui::UpdatePlatformWindows();
 			ImGui::RenderPlatformWindowsDefault();
 			glfwMakeContextCurrent(backup_current_context);
