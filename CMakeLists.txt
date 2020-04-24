@@ -1,9 +1,20 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.15)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+if(WIN32)
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /fp:fast")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /fp:fast")
+endif(WIN32)
+if(UNIX)
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffast-math")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffast-math")
+endif(UNIX)
+
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 
 project(Carrins)
 
 add_subdirectory(${PROJECT_NAME})
+
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
