@@ -1,5 +1,5 @@
 #include "App.h"
-#include "Window.h"
+#include "Inupt.h"
 
 #include "Core.h"
 
@@ -19,7 +19,7 @@ App &App::Get()
 
 App::App() : m_Window(Window::Create(640, 480, "Carrins"))
 {
-	m_Window->SetEventCallback([](Event &evt) { Get().OnEvent(evt); });
+	m_Window->SetEventCallback([](Event &e) { Get().OnEvent(e); });
 	m_Running = true;
 }
 
@@ -33,7 +33,6 @@ int App::Run()
 	auto &running = Get().m_Running;
 	while (running)
 	{
-		window->PollEvents();
 		ImGuiLayer::BeginFrame();
 		ImGuiLayer::Update();
 
@@ -41,7 +40,7 @@ int App::Run()
 		Renderer::EndScene();
 
 		ImGuiLayer::EndFrame();
-		window->SwapBuffers();
+		window->Update();
 	}
 
 	ImGuiLayer::Shutdown();
@@ -56,13 +55,26 @@ void App::ShutDown()
 
 void App::OnEvent(Event &e)
 {
-	e.Dispatch<CloseEvent>([](CloseEvent &evt) {
-		App::ShutDown();
-		return true;
-	});
+	if (e.Dispatch<CloseEvent>([](CloseEvent &e) {
+				App::ShutDown();
+				return true;
+			}))
+		return;
 
-	e.Dispatch<ResizeEvent>([](ResizeEvent &evt) {
-		DebugLog("Width: " << evt.Width << " Height: " << evt.Height << '\n');
-		return true;
-	});
+	if (e.Dispatch<KeyEvent>([](KeyEvent &e) {
+				if (e.Code == GLFW_KEY_ESCAPE)
+				{
+					App::ShutDown();
+					DebugLog("Application closed on esc\n");
+					return true;
+				}
+				else
+					return false;
+			}))
+		return;
+}
+
+Window &App::GetWindow() const
+{
+	return *m_Window;
 }

@@ -19,6 +19,5 @@ public:
 	virtual void EnableVSync() = 0;
 	virtual void DisableVSync() = 0;
 
-	virtual void PollEvents() = 0;
-	virtual void SwapBuffers() = 0;
+	virtual void Update() = 0;
 };

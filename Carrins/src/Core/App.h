@@ -1,4 +1,5 @@
 #pragma once
+#include "Window.h"
 
 class App
 {
@@ -10,6 +11,8 @@ public:
 	static void ShutDown();
 
 	void OnEvent(class Event& e);
+
+	class Window& GetWindow() const;
 private:
 	App();
 private:

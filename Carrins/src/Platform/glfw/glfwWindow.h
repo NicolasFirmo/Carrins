@@ -18,8 +18,7 @@ public:
 	virtual void EnableVSync() override;
 	virtual void DisableVSync() override;
 
-	virtual void PollEvents() override;
-	virtual void SwapBuffers() override;
+	virtual void Update() override;
 
 private:
 	struct Data

@@ -44,6 +44,8 @@ glfwWindow::glfwWindow(int width, int height, const char *title) : m_Data({width
 	});
 	glfwSetWindowSizeCallback(m_Window, [](GLFWwindow *window, int width, int height) {
 		Data &data = *reinterpret_cast<Data *>(glfwGetWindowUserPointer(window));
+		data.Width = width;
+		data.Height = height;
 
 		ResizeEvent e{width, height};
 		data.EventCallback(e);
@@ -155,11 +157,8 @@ void glfwWindow::DisableVSync()
 	m_Data.VSync = false;
 }
 
-void glfwWindow::PollEvents()
-{
-	glfwPollEvents();
-}
-void glfwWindow::SwapBuffers()
+void glfwWindow::Update()
 {
 	glfwSwapBuffers(m_Window);
+	glfwPollEvents();
 }

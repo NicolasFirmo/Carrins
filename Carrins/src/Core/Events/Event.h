@@ -13,9 +13,9 @@ public:
 	template <typename E>
 	bool Dispatch(EventFn<E> func)
 	{
-		if (auto evt = dynamic_cast<E *>(this))
+		if (auto e = dynamic_cast<E *>(this))
 		{
-			m_Handled = func(*evt);
+			m_Handled = func(*e);
 			return true;
 		}
 		else
