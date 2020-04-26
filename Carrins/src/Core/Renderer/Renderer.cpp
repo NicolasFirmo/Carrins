@@ -19,9 +19,18 @@ struct
 } static constexpr s_ClearColor;
 #endif
 
+void Renderer::Draw(const VertexArray& va)
+{
+	va.Bind();
+	s_API->Draw(va);
+}
+
 void Renderer::Init()
 {
 	s_API->SetClearColor(s_ClearColor.r, s_ClearColor.g, s_ClearColor.b, s_ClearColor.a);
+}
+void Renderer::Shutdown()
+{
 }
 
 void Renderer::BeginScene()

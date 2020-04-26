@@ -1,5 +1,5 @@
 #include "OpenGLContext.h"
-#include <glad/glad.h>
+#include "OpenGLCore.h"
 
 #include "Core.h"
 

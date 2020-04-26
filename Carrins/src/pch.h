@@ -6,6 +6,7 @@
 #include <memory>
 
 #include <vector>
+#include <initializer_list>
 #include <map>
 #include <unordered_map>
 #include <unordered_set>

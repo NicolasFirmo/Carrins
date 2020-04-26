@@ -1,5 +1,5 @@
-#include "Core/App.h"
 #include "Core.h"
+#include "Core/App.h"
 
 int MAIN()
 {
