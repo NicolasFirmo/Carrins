@@ -15,9 +15,11 @@ public:
 	virtual int GetWidth() const = 0;
 	virtual int GetHeight() const = 0;
 
-	virtual bool IsVSync() const = 0;
-	virtual void EnableVSync() = 0;
-	virtual void DisableVSync() = 0;
+	virtual bool IsFullScreen() const = 0;
+	virtual void ToggleFullScreen() = 0;
 
-	virtual void Update() const = 0;
+	virtual bool IsVSync() const = 0;
+	virtual void ToggleVSync() = 0;
+
+	virtual void Update(bool vSync, bool fullScreen) = 0;
 };

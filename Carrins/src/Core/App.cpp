@@ -21,14 +21,14 @@ App App::s_Instance;
 
 static float s_Fov = glm::radians(80.0f);
 
-App &App::Get()
+App& App::Get()
 {
 	return s_Instance;
 }
 
 App::App() : m_Window(Window::Create(640, 480, "Carrins"))
 {
-	m_Window->SetEventCallback([](Event &e) { Get().OnEvent(e); });
+	m_Window->SetEventCallback([](Event& e) { Get().OnEvent(e); });
 
 	struct Vertex
 	{
@@ -66,7 +66,7 @@ App::App() : m_Window(Window::Create(640, 480, "Carrins"))
 	std::unique_ptr<VertexBuffer> vb = VertexBuffer::Create(vertices, sizeof(vertices), {
 																																													{VertexLayout::Attribute::T::Float3},
 																																													{VertexLayout::Attribute::T::Float3},
-																																											});
+		});
 	std::unique_ptr<IndexBuffer> ib = IndexBuffer::Create(indices, std::size(indices));
 
 	m_Va = VertexArray::Create(std::move(vb), std::move(ib));
@@ -75,9 +75,9 @@ App::App() : m_Window(Window::Create(640, 480, "Carrins"))
 	m_Shdr->Bind();
 
 	m_Projection = glm::perspective(s_Fov, float(m_Window->GetWidth()) / float(m_Window->GetHeight()), 0.1f, 150.0f);
-	m_View = glm::translate(m_View, {0.0f, 0.0f, -3.0f});
-	m_View = glm::rotate(m_View, glm::pi<float>()/4, {1.0f, 0.0f, 0.0f});
-	m_View = glm::rotate(m_View, -glm::pi<float>()/4, {0.0f, 1.0f, 0.0f});
+	m_View = glm::translate(m_View, { 0.0f, 0.0f, -3.0f });
+	m_View = glm::rotate(m_View, glm::pi<float>() / 4, { 1.0f, 0.0f, 0.0f });
+	m_View = glm::rotate(m_View, -glm::pi<float>() / 4, { 0.0f, 1.0f, 0.0f });
 
 	m_Shdr->SetUniformMat4("u_ViewProjection", m_Projection * m_View);
 	m_Shdr->SetUniformMat4("u_ModelTransform", glm::mat4(1.0f));
@@ -87,19 +87,19 @@ App::App() : m_Window(Window::Create(640, 480, "Carrins"))
 
 int App::Run()
 {
-	auto &window = *Get().m_Window;
-	auto &va = *Get().m_Va;
+	auto& window = *Get().m_Window;
+	auto& va = *Get().m_Va;
 
 	Renderer::Init();
-	ImGuiLayer::Init(reinterpret_cast<GLFWwindow *>(window.GetNativeWindow()), glsl_version);
+	ImGuiLayer::Init(reinterpret_cast<GLFWwindow*>(window.GetNativeWindow()), glsl_version);
 
-	auto &dt = Get().m_Dt;
+	auto& dt = Get().m_Dt;
 	std::chrono::time_point<std::chrono::high_resolution_clock> tp = std::chrono::high_resolution_clock::now();
 
-	auto &running = Get().m_Running;
+	auto& running = Get().m_Running;
 	while (running)
 	{
-		dt = (std::chrono::high_resolution_clock::now() - tp).count()/1000000000.0f;
+		dt = (std::chrono::high_resolution_clock::now() - tp).count() / 1000000000.0f;
 		tp = std::chrono::high_resolution_clock::now();
 		DoFrame(dt, window, va);
 	}
@@ -110,20 +110,23 @@ int App::Run()
 	return 0;
 }
 
-void App::DoFrame(float dt, const class Window &window, const class VertexArray &vertexArray)
+void App::DoFrame(float dt, class Window& window, const class VertexArray& vertexArray)
 {
 	// input stuff
 	ControllCamera(dt);
 
 	ImGuiLayer::BeginFrame();
-	ImGuiLayer::Update(dt, s_Fov);
+	bool vSync = window.IsVSync();
+	bool fullScreen = window.IsFullScreen();
+	ImGuiLayer::Update(dt, s_Fov, vSync, fullScreen);
 
 	Renderer::BeginScene();
 	Renderer::Draw(vertexArray);
 	Renderer::EndScene();
 
 	ImGuiLayer::EndFrame();
-	window.Update();
+
+	window.Update(vSync, fullScreen);
 }
 
 void App::ControllCamera(float dt)
@@ -132,56 +135,56 @@ void App::ControllCamera(float dt)
 
 	if (Input::IsKeyPressed(GLFW_KEY_LEFT_SHIFT))
 		dt *= 0.5f;
-	
+
 	if (Input::IsKeyPressed(GLFW_KEY_W))
 	{
-		view = glm::translate(glm::mat4(1.0f), {0.0f, 0.0f, dt}) * view;
+		view = glm::translate(glm::mat4(1.0f), { 0.0f, 0.0f, dt }) * view;
 		App::UpdateViewProjection();
 	}
 	else if (Input::IsKeyPressed(GLFW_KEY_S))
 	{
-		view = glm::translate(glm::mat4(1.0f), {0.0f, 0.0f, -dt}) * view;
+		view = glm::translate(glm::mat4(1.0f), { 0.0f, 0.0f, -dt }) * view;
 		App::UpdateViewProjection();
 	}
 	if (Input::IsKeyPressed(GLFW_KEY_D))
 	{
-		view = glm::translate(glm::mat4(1.0f), {-dt, 0.0f, 0.0f}) * view;
+		view = glm::translate(glm::mat4(1.0f), { -dt, 0.0f, 0.0f }) * view;
 		App::UpdateViewProjection();
 	}
 	else if (Input::IsKeyPressed(GLFW_KEY_A))
 	{
-		view = glm::translate(glm::mat4(1.0f), {dt, 0.0f, 0.0f}) * view;
+		view = glm::translate(glm::mat4(1.0f), { dt, 0.0f, 0.0f }) * view;
 		App::UpdateViewProjection();
 	}
 
 	if (Input::IsKeyPressed(GLFW_KEY_Q))
 	{
-		view = glm::rotate(glm::mat4(1.0f),-dt, {0.0f, 0.0f, 1.0f}) * view;
+		view = glm::rotate(glm::mat4(1.0f), -dt, { 0.0f, 0.0f, 1.0f }) * view;
 		App::UpdateViewProjection();
 	}
 	else if (Input::IsKeyPressed(GLFW_KEY_E))
 	{
-		view = glm::rotate(glm::mat4(1.0f), dt, {0.0f, 0.0f, 1.0f}) * view;
+		view = glm::rotate(glm::mat4(1.0f), dt, { 0.0f, 0.0f, 1.0f }) * view;
 		App::UpdateViewProjection();
 	}
 	if (Input::IsKeyPressed(GLFW_KEY_UP))
 	{
-		view = glm::rotate(glm::mat4(1.0f), dt, {1.0f, 0.0f, 0.0f}) * view;
+		view = glm::rotate(glm::mat4(1.0f), dt, { 1.0f, 0.0f, 0.0f }) * view;
 		App::UpdateViewProjection();
 	}
 	else if (Input::IsKeyPressed(GLFW_KEY_DOWN))
 	{
-		view = glm::rotate(glm::mat4(1.0f), -dt, {1.0f, 0.0f, 0.0f}) * view;
+		view = glm::rotate(glm::mat4(1.0f), -dt, { 1.0f, 0.0f, 0.0f }) * view;
 		App::UpdateViewProjection();
 	}
 	if (Input::IsKeyPressed(GLFW_KEY_RIGHT))
 	{
-		view = glm::rotate(glm::mat4(1.0f), dt, {0.0f, 1.0f, 0.0f}) * view;
+		view = glm::rotate(glm::mat4(1.0f), dt, { 0.0f, 1.0f, 0.0f }) * view;
 		App::UpdateViewProjection();
 	}
 	else if (Input::IsKeyPressed(GLFW_KEY_LEFT))
 	{
-		view = glm::rotate(glm::mat4(1.0f), -dt, {0.0f, 1.0f, 0.0f}) * view;
+		view = glm::rotate(glm::mat4(1.0f), -dt, { 0.0f, 1.0f, 0.0f }) * view;
 		App::UpdateViewProjection();
 	}
 }
@@ -197,40 +200,58 @@ void App::UpdateViewProjection()
 	Get().m_Shdr->SetUniformMat4("u_ViewProjection", Get().m_Projection * Get().m_View);
 }
 
-void App::OnEvent(Event &e)
+void App::OnEvent(Event& e)
 {
-	if (e.Dispatch<CloseEvent>([](CloseEvent &e) {
-				App::ShutDown();
-				return true;
-			}))
+	if (e.Dispatch<CloseEvent>([](CloseEvent& e) {
+		App::ShutDown();
+		return true;
+		}))
 		return;
 
-	e.Dispatch<ResizeEvent>([](ResizeEvent &e) {
-		Renderer::SetViewport(e.Width, e.Height);
-		Get().m_Projection = glm::perspective(s_Fov, float(e.Width) / float(e.Height), 0.1f, 150.0f);
-		Get().m_Shdr->SetUniformMat4("u_ViewProjection", Get().m_Projection * Get().m_View);
+		e.Dispatch<ResizeEvent>([](ResizeEvent& e) {
+			if (e.Height && e.Width)
+			{
+				Renderer::SetViewport(e.Width, e.Height);
+				Get().m_Projection = glm::perspective(s_Fov, float(e.Width) / float(e.Height), 0.1f, 150.0f);
+				Get().m_Shdr->SetUniformMat4("u_ViewProjection", Get().m_Projection * Get().m_View);
 #ifdef PLATFORM_WINDOWS
-		DoFrame(*Get().m_Window, *Get().m_Va);
+				DoFrame(Get().m_Dt, *Get().m_Window, *Get().m_Va);
 #endif
-		return false;
-	});
-
-	e.Dispatch<KeyEvent>([](KeyEvent &e) {
-		if (e.Code == GLFW_KEY_ESCAPE)
-		{
-			App::ShutDown();
-			DebugLog("Application closed on esc\n");
-			return true;
-		}
-		else
+				return true;
+			}
 			return false;
-	});
+			});
 
-	if (e.IsHandled())
-		return;
+		e.Dispatch<KeyEvent>([](KeyEvent& e) {
+			if (e.Type == KeyEvent::T::Pressed)
+			{
+				switch (e.Code)
+				{
+				case GLFW_KEY_ESCAPE:
+				{
+					App::ShutDown();
+					DebugLog("Application closed on esc\n");
+					return true;
+				}
+				case GLFW_KEY_F11:
+				case GLFW_KEY_F:
+				{
+					Get().GetWindow().ToggleFullScreen();
+					return true;
+				}
+				default:
+					return false;
+				}
+			}
+			else
+				return false;
+			});
+
+		if (e.IsHandled())
+			return;
 }
 
-Window &App::GetWindow() const
+Window& App::GetWindow() const
 {
 	return *m_Window;
 }

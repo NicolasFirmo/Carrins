@@ -8,7 +8,7 @@ public:
 	static App &Get();
 
 	static int Run();
-	static void DoFrame(float dt, const class Window& window, const class VertexArray& vertexArray);
+	static void DoFrame(float dt, class Window& window, const class VertexArray& vertexArray);
 	static void ShutDown();
 
 	static void UpdateViewProjection();

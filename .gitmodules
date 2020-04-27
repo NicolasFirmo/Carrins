@@ -4,3 +4,4 @@
 [submodule "Carrins/Vendor/glm"]
 	path = Carrins/Vendor/glm
 	url = git@github.com:g-truc/glm.git
+	ignore = dirty

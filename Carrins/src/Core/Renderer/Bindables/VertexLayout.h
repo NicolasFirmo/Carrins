@@ -40,9 +40,11 @@ public:
 				return 3;
 			case T::UInt4:
 				return 4;
+
+			default:
+				NIC_ASSERT(false, "Bad vertex attribute type");
+				return 0;
 			}
-			NIC_ASSERT(false, "Bad vertex attribute type");
-			return 0;
 		};
 		size_t Size() const
 		{
@@ -65,9 +67,11 @@ public:
 				return 3 * sizeof(unsigned);
 			case T::UInt4:
 				return 4 * sizeof(unsigned);
+
+			default:
+				NIC_ASSERT(false, "Bad vertex attribute type");
+				return 0;
 			}
-			NIC_ASSERT(false, "Bad vertex attribute type");
-			return 0;
 		};
 	};
 	VertexLayout(const std::initializer_list<Attribute> &attributes);

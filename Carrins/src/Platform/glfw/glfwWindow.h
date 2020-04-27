@@ -14,19 +14,25 @@ public:
 	virtual int GetWidth() const override;
 	virtual int GetHeight() const override;
 
-	virtual bool IsVSync() const override;
-	virtual void EnableVSync() override;
-	virtual void DisableVSync() override;
+	virtual bool IsFullScreen() const override;
+	virtual void ToggleFullScreen() override;
 
-	virtual void Update() const override;
+	virtual bool IsVSync() const override;
+	virtual void ToggleVSync() override;
+
+	virtual void Update(bool vSync, bool fullScreen) override;
 
 private:
 	struct Data
 	{
 		int Width, Height;
-		bool VSync = false;
 		EventCallbackFn EventCallback = nullptr;
-	} m_Data;
+	} m_WindowData;
+
+	bool m_VSync = false;
+	bool m_FullScreen = false;
+	int m_WindowLastWidth = m_WindowData.Width;
+	int m_WindowLastHeight = m_WindowData.Height;
 
 	struct GLFWwindow *m_Window;
 };
