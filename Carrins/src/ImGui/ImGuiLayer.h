@@ -10,5 +10,5 @@ public:
 	static void BeginFrame();
 	static void EndFrame();
 
-	static void Update();
+	static void Update(float dt, float& fov);
 };

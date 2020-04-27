@@ -31,6 +31,7 @@ void Renderer::SetViewport(int width, int height)
 
 void Renderer::Init()
 {
+	s_API->EnableFaceCulling(RendererAPI::WindingOrder::CounterClockwise);
 	s_API->SetClearColor(s_ClearColor.r, s_ClearColor.g, s_ClearColor.b, s_ClearColor.a);
 }
 void Renderer::Shutdown()

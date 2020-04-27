@@ -3,7 +3,9 @@
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
 
-void ImGuiLayer::Init(GLFWwindow* window, const char *glsl_version)
+#include "Core/App.h"
+
+void ImGuiLayer::Init(GLFWwindow *window, const char *glsl_version)
 {
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -65,13 +67,19 @@ void ImGuiLayer::EndFrame()
 	}
 }
 
-void ImGuiLayer::Update()
+void ImGuiLayer::Update(float dt, float &fov)
 {
-	ImGui::Begin("Test");
-	ImGui::Text("Texto de teste");
+	ImGui::Begin("Camera");
+	if (ImGui::SliderAngle("Campo de visão", &fov, 0.0f, 180.0f, "%.0f°"))
+		App::UpdateViewProjection();
 	ImGui::End();
 
-	ImGui::Begin("Test2");
-	ImGui::Text("textão");
+	auto &window = App::Get().GetWindow();
+
+	ImGui::Begin("App");
+	ImGui::Text("Rodando a %.1ffps (%.3fms/frame)", 1.0f / dt, dt * 1000.0f);
+	bool vsync = window.IsVSync();
+	ImGui::Checkbox("VSync", &vsync);
+	vsync ? window.EnableVSync() : window.DisableVSync();
 	ImGui::End();
 }

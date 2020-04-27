@@ -13,6 +13,19 @@ void OpenGLRendererAPI::SetViewport(int width,int height) const
 {
 	GLCall(glViewport(0,0,width,height));
 }
+void OpenGLRendererAPI::EnableFaceCulling(WindingOrder order) const
+{
+	GLCall(glEnable(GL_CULL_FACE));
+	switch (order)
+	{
+	case WindingOrder::Clockwise:
+		GLCall(glFrontFace(GL_CW));
+		break;
+	case WindingOrder::CounterClockwise:
+		GLCall(glFrontFace(GL_CCW));
+		break;
+	}
+}
 void OpenGLRendererAPI::Draw(const VertexArray &vertexArray) const
 {
 	GLCall(glDrawElements(GL_TRIANGLES, vertexArray.GetIndexCount(), GL_UNSIGNED_INT, nullptr));

@@ -1,3 +1,6 @@
 [submodule "Carrins/Vendor/glfw"]
 	path = Carrins/Vendor/glfw
 	url = https://github.com/glfw/glfw.git
+[submodule "Carrins/Vendor/glm"]
+	path = Carrins/Vendor/glm
+	url = git@github.com:g-truc/glm.git

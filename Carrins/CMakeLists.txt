@@ -10,6 +10,8 @@ if(NOT BUILD_SHARED_LIBS)
 endif(NOT BUILD_SHARED_LIBS)
 add_subdirectory(Vendor/glfw)
 
+add_subdirectory(Vendor/glm)
+
 add_subdirectory(Vendor/imgui)
 
 file(GLOB_RECURSE "${PROJECT_NAME}_SOURCES" RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} CONFIGURE_DEPENDS
@@ -27,6 +29,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE src)
 target_link_libraries(${PROJECT_NAME} OpenGL::GL)
 target_link_libraries(${PROJECT_NAME} glad)
 target_link_libraries(${PROJECT_NAME} glfw)
+target_link_libraries(${PROJECT_NAME} glm)
 target_link_libraries(${PROJECT_NAME} imgui)
 
 if(WIN32)
@@ -38,6 +41,7 @@ if(MSVC)
 		set_target_properties(${PROJECT_NAME} PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 		set_target_properties(glad PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 		set_target_properties(glfw PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+		set_target_properties(glm PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 		set_target_properties(imgui PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 	endif(NOT BUILD_SHARED_LIBS)
 endif(MSVC)

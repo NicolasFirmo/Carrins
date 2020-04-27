@@ -17,7 +17,7 @@ static constexpr const char* glsl_version = "#version 410";
 
 	#ifndef NDEBUG
 		#define	DEBUG_BREAK() raise(SIGTRAP);
-		#define DebugLog(x) std::cout << x
+		#define DebugLog(x) std::clog << x
 	#else
 		#define DebugLog(x)
 	#endif

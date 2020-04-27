@@ -18,7 +18,6 @@ public:
 			UInt3,
 			UInt4,
 		} Type;
-		std::string Name;
 
 		size_t Count() const
 		{
