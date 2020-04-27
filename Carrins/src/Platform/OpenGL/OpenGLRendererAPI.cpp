@@ -9,6 +9,10 @@ void OpenGLRendererAPI::SetClearColor(const float r, const float g, const float 
 {
 	GLCall(glClearColor(r, g, b, a));
 }
+void OpenGLRendererAPI::SetViewport(int width,int height)
+{
+	GLCall(glViewport(0,0,width,height));
+}
 void OpenGLRendererAPI::Draw(const VertexArray &vertexArray)
 {
 	GLCall(glDrawElements(GL_TRIANGLES, vertexArray.GetIndexCount(), GL_UNSIGNED_INT, nullptr));

@@ -13,6 +13,7 @@
 #include "Renderer/Bindables/VertexBuffer.h"
 #include "Renderer/Bindables/IndexBuffer.h"
 #include "Renderer/Bindables/VertexArray.h"
+#include "Renderer/Bindables/Shader.h"
 
 App App::s_Instance;
 
@@ -31,32 +32,33 @@ App::App() : m_Window(Window::Create(640, 480, "Carrins"))
 		{
 			float x, y;
 		} Position;
+		struct
+		{
+			float r, g, b;
+		} Color;
 	};
 
 	const Vertex vertices[] = {
-			-0.5f,
-			-0.5f,
-			0.5f,
-			-0.5f,
-			0.5f,
-			0.5f,
-			-0.5f,
-			0.5f,
+			{-0.5f,-0.5f,0.5f,1.0f,0.0f},
+			{ 0.5f,-0.5f,0.0f,1.0f,0.0f},
+			{ 0.5f, 0.5f,0.0f,1.0f,0.5f},
+			{-0.5f, 0.5f,0.0f,1.0f,0.0f},
 	};
 
 	const unsigned indices[] = {
-			0,
-			1,
-			2,
-			2,
-			3,
-			0,
+			0,1,2,	2,3,0,
 	};
 
-	std::unique_ptr<VertexBuffer> vb = VertexBuffer::Create(vertices, sizeof(vertices), {{VertexLayout::Attribute::T::Float2, "a_Position"}});
+	std::unique_ptr<VertexBuffer> vb = VertexBuffer::Create(vertices, sizeof(vertices), {
+		{VertexLayout::Attribute::T::Float2, "a_Position"},
+		{VertexLayout::Attribute::T::Float3, "a_Color"},
+		});
 	std::unique_ptr<IndexBuffer> ib = IndexBuffer::Create(indices, std::size(indices));
 
 	m_Va = VertexArray::Create(std::move(vb), std::move(ib));
+
+	m_Shdr = Shader::Create("Assets/Shaders/BasicShader.glsl");
+	m_Shdr->Bind();
 
 	m_Running = true;
 }
@@ -99,6 +101,12 @@ void App::OnEvent(Event &e)
 	if (e.Dispatch<CloseEvent>([](CloseEvent &e) {
 				App::ShutDown();
 				return true;
+			}))
+		return;
+		
+	if (e.Dispatch<ResizeEvent>([](ResizeEvent &e) {
+				Renderer::SetViewport(e.Width,e.Height);
+				return false;
 			}))
 		return;
 

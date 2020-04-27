@@ -10,8 +10,8 @@ public:
 	virtual void Bind() const override;
 
 private:
-	constexpr int GetGLType(VertexLayout::Attribute::T type) const noexcept;
-	constexpr int GetGLNormalized(VertexLayout::Attribute::T type) const noexcept;
+	unsigned GetGLType(VertexLayout::Attribute::T type) const noexcept;
+	unsigned char GetGLNormalized(VertexLayout::Attribute::T type) const noexcept;
 
 private:
 	unsigned m_Id;

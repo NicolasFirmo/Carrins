@@ -1,7 +1,9 @@
 #pragma once
+#include "Core.h"
 
-struct VertexLayout
+class VertexLayout
 {
+public:
 	struct Attribute
 	{
 		enum class T
@@ -18,7 +20,8 @@ struct VertexLayout
 		} Type;
 		std::string Name;
 
-		size_t Size() const {
+		size_t Count() const
+		{
 			switch (Type)
 			{
 			case T::Float:
@@ -39,8 +42,11 @@ struct VertexLayout
 			case T::UInt4:
 				return 4;
 			}
+			NIC_ASSERT(false, "Bad vertex attribute type");
+			return 0;
 		};
-		size_t Stride() const {
+		size_t Size() const
+		{
 			switch (Type)
 			{
 			case T::Float:
@@ -53,16 +59,23 @@ struct VertexLayout
 				return 4 * sizeof(float);
 
 			case T::UInt:
-				return 1 * sizeof(unsigned int);
+				return 1 * sizeof(unsigned);
 			case T::UInt2:
-				return 2 * sizeof(unsigned int);
+				return 2 * sizeof(unsigned);
 			case T::UInt3:
-				return 3 * sizeof(unsigned int);
+				return 3 * sizeof(unsigned);
 			case T::UInt4:
-				return 4 * sizeof(unsigned int);
+				return 4 * sizeof(unsigned);
 			}
+			NIC_ASSERT(false, "Bad vertex attribute type");
+			return 0;
 		};
 	};
-	std::vector<Attribute> Attributes;
-	VertexLayout(const std::initializer_list<Attribute>& attributes) : Attributes(attributes){}
+	VertexLayout(const std::initializer_list<Attribute> &attributes);
+	const std::vector<Attribute>& GetAttributes() const { return m_Attributes; }
+	int Stride() const { return m_Stride; }
+
+private:
+	std::vector<Attribute> m_Attributes;
+	int m_Stride = 0;
 };

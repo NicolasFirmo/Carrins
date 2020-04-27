@@ -13,11 +13,12 @@ OpenGLVertexArray::OpenGLVertexArray(std::unique_ptr<VertexBuffer> &&vertexBuffe
 
 	unsigned idx = -1;
 	size_t offset = 0;
-	for (const auto &attrib : m_VertexBuffer->GetLayout().Attributes)
+	const auto & layout = m_VertexBuffer->GetLayout();
+	for (const auto &attrib : layout.GetAttributes())
 	{
 		GLCall(glEnableVertexAttribArray(++idx));
-		GLCall(glVertexAttribPointer(idx, attrib.Size(), GetGLType(attrib.Type), GetGLNormalized(attrib.Type), attrib.Stride(), reinterpret_cast<void *>(offset)));
-		offset += attrib.Stride();
+		GLCall(glVertexAttribPointer(idx, attrib.Count(), GetGLType(attrib.Type), GetGLNormalized(attrib.Type), layout.Stride(), reinterpret_cast<void *>(offset)));
+		offset += attrib.Size();
 	}
 }
 OpenGLVertexArray::~OpenGLVertexArray()
@@ -34,7 +35,7 @@ void OpenGLVertexArray::Bind() const
 
 // Helpers
 
-constexpr int OpenGLVertexArray::GetGLType(VertexLayout::Attribute::T type) const noexcept
+unsigned OpenGLVertexArray::GetGLType(VertexLayout::Attribute::T type) const noexcept
 {
 	using T = VertexLayout::Attribute::T;
 	switch (type)
@@ -57,9 +58,11 @@ constexpr int OpenGLVertexArray::GetGLType(VertexLayout::Attribute::T type) cons
 	case T::UInt4:
 		return GL_UNSIGNED_INT;
 	}
+	NIC_ASSERT(false, "Bad vertex attribute type");
+	return 0;
 }
 
-constexpr int OpenGLVertexArray::GetGLNormalized(VertexLayout::Attribute::T type) const noexcept
+unsigned char OpenGLVertexArray::GetGLNormalized(VertexLayout::Attribute::T type) const noexcept
 {
 	using T = VertexLayout::Attribute::T;
 	switch (type)
@@ -82,4 +85,6 @@ constexpr int OpenGLVertexArray::GetGLNormalized(VertexLayout::Attribute::T type
 	case T::UInt4:
 		return GL_TRUE;
 	}
+	NIC_ASSERT(false, "Bad vertex attribute type");
+	return 0;
 }

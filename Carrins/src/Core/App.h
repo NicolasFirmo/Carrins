@@ -24,4 +24,5 @@ private:
 	std::unique_ptr<class Window> m_Window;
 
 	std::unique_ptr<class VertexArray> m_Va;
+	std::unique_ptr<class Shader> m_Shdr;
 };

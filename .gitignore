@@ -9,6 +9,7 @@ CMakeFiles/
 **/Release
 
 # files
+/Assets
 *.cmake
 imgui.ini
 *.vcxproj*

@@ -19,10 +19,14 @@ struct
 } static constexpr s_ClearColor;
 #endif
 
-void Renderer::Draw(const VertexArray& va)
+void Renderer::Draw(const VertexArray &va)
 {
 	va.Bind();
 	s_API->Draw(va);
+}
+void Renderer::SetViewport(int width, int height)
+{
+	s_API->SetViewport(width, height);
 }
 
 void Renderer::Init()
