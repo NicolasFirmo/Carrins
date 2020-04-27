@@ -2,7 +2,7 @@
 #include <GLFW/glfw3.h>
 #include "Core/App.h"
 
-std::unique_ptr<Input> Input::s_Instatnce = std::make_unique<glfwInput>();
+std::unique_ptr<Input> Input::s_Instance = std::make_unique<glfwInput>();
 
 bool glfwInput::IsKeyPressed_(int keycode) const
 {

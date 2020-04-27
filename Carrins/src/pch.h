@@ -1,15 +1,28 @@
 #include <iostream>
-#include <type_traits>
 #include <fstream>
 #include <sstream>
-#include <string>
-#include <memory>
+#include <iomanip>
 
+#include <type_traits>
+#include <typeinfo>
+#include <climits>
+
+#include <chrono>
+#include <locale>
+
+#include <memory>
+#include <string>
+#include <array>
 #include <vector>
-#include <initializer_list>
+#include <queue>
 #include <map>
 #include <unordered_map>
 #include <unordered_set>
+#include <initializer_list>
+
+#include <functional>
+#include <utility>
+#include <algorithm>
 
 #ifdef PLATFORM_LINUX
 	#ifndef NDEBUG

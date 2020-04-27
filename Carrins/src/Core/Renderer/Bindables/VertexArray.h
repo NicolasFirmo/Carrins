@@ -10,7 +10,7 @@ public:
 
 	virtual ~VertexArray() = default;
 	virtual void Bind() const = 0;
-	size_t GetIndexCount() const {return m_IndexBuffer->GetCount();};
+	size_t GetIndexCount() const {return m_IndexBuffer->GetCount();}
 
 protected:
 	std::unique_ptr<VertexBuffer> m_VertexBuffer;

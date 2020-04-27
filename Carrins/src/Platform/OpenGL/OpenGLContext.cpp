@@ -1,8 +1,6 @@
 #include "OpenGLContext.h"
 #include "OpenGLCore.h"
 
-#include "Core.h"
-
 void OpenGLContext::Init(void *procAddress)
 {
 	NIC_ASSERT(gladLoadGLLoader((GLADloadproc)procAddress), "Glad could not load OpenGl");

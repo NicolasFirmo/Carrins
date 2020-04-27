@@ -10,7 +10,7 @@ public:
 	using EventCallbackFn = void(*)(Event &);
 	virtual void SetEventCallback(const EventCallbackFn &callback) = 0;
 
-	virtual void *GetNativeWindow() = 0;
+	virtual void *GetNativeWindow() const = 0;
 
 	virtual int GetWidth() const = 0;
 	virtual int GetHeight() const = 0;
@@ -19,5 +19,5 @@ public:
 	virtual void EnableVSync() = 0;
 	virtual void DisableVSync() = 0;
 
-	virtual void Update() = 0;
+	virtual void Update() const = 0;
 };

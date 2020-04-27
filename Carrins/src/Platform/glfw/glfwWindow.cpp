@@ -115,7 +115,6 @@ glfwWindow::glfwWindow(int width, int height, const char *title) : m_Data({width
 		data.EventCallback(e);
 	});
 }
-
 glfwWindow::~glfwWindow()
 {
 	glfwDestroyWindow(m_Window);
@@ -127,7 +126,7 @@ void glfwWindow::SetEventCallback(const EventCallbackFn &callback)
 	m_Data.EventCallback = callback;
 }
 
-void *glfwWindow::GetNativeWindow()
+void *glfwWindow::GetNativeWindow() const
 {
 	return m_Window;
 }
@@ -145,7 +144,6 @@ bool glfwWindow::IsVSync() const
 {
 	return m_Data.VSync;
 }
-
 void glfwWindow::EnableVSync()
 {
 	glfwSwapInterval(1);
@@ -157,7 +155,7 @@ void glfwWindow::DisableVSync()
 	m_Data.VSync = false;
 }
 
-void glfwWindow::Update()
+void glfwWindow::Update() const
 {
 	glfwSwapBuffers(m_Window);
 	glfwPollEvents();

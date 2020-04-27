@@ -4,10 +4,10 @@
 class App
 {
 public:
-	App(const App &) = delete;
 	static App &Get();
 
 	static int Run();
+	static void DoFrame(const class Window& window, const class VertexArray& vertexArray);
 	static void ShutDown();
 
 	void OnEvent(class Event &e);
@@ -16,9 +16,11 @@ public:
 
 private:
 	App();
+	App(const App &) = delete;
 
 private:
 	static App s_Instance;
+
 	bool m_Running = false;
 
 	std::unique_ptr<class Window> m_Window;

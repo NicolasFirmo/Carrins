@@ -9,7 +9,7 @@ public:
 
 	virtual void SetEventCallback(const EventCallbackFn &callback) override;
 
-	virtual void *GetNativeWindow() override;
+	virtual void *GetNativeWindow() const override;
 
 	virtual int GetWidth() const override;
 	virtual int GetHeight() const override;
@@ -18,7 +18,7 @@ public:
 	virtual void EnableVSync() override;
 	virtual void DisableVSync() override;
 
-	virtual void Update() override;
+	virtual void Update() const override;
 
 private:
 	struct Data

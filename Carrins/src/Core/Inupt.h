@@ -10,12 +10,12 @@ public:
 	};
 
 public:
-	static bool IsKeyPressed(int keycode) { return s_Instatnce->IsKeyPressed_(keycode); }
-	static bool IsMouseButtonPressed(int button) { return s_Instatnce->IsMouseButtonPressed_(button); }
+	static bool IsKeyPressed(int keycode) { return s_Instance->IsKeyPressed_(keycode); }
+	static bool IsMouseButtonPressed(int button) { return s_Instance->IsMouseButtonPressed_(button); }
 
-	static Pos GetMousePosition() { return s_Instatnce->GetMousePosition_(); }
-	static float GetMouseXPosition() { return s_Instatnce->GetMouseXPosition_(); }
-	static float GetMouseYPosition() { return s_Instatnce->GetMouseYPosition_(); }
+	static Pos GetMousePosition() { return s_Instance->GetMousePosition_(); }
+	static float GetMouseXPosition() { return s_Instance->GetMouseXPosition_(); }
+	static float GetMouseYPosition() { return s_Instance->GetMouseYPosition_(); }
 
 protected:
 	virtual bool IsKeyPressed_(int keycode) const = 0;
@@ -25,6 +25,10 @@ protected:
 	virtual float GetMouseXPosition_() const = 0;
 	virtual float GetMouseYPosition_() const = 0;
 
+protected:
+	Input() = default;
+	Input(const Input&) = delete;
+
 private:
-	static std::unique_ptr<Input> s_Instatnce;
+	static std::unique_ptr<Input> s_Instance;
 };

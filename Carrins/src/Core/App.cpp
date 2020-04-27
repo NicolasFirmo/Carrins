@@ -65,30 +65,33 @@ App::App() : m_Window(Window::Create(640, 480, "Carrins"))
 
 int App::Run()
 {
-	auto &window = Get().m_Window;
+	auto &window = *Get().m_Window;
 	auto &va = *Get().m_Va;
 
 	Renderer::Init();
-	ImGuiLayer::Init(reinterpret_cast<GLFWwindow *>(window->GetNativeWindow()), glsl_version);
+	ImGuiLayer::Init(reinterpret_cast<GLFWwindow *>(window.GetNativeWindow()), glsl_version);
 
 	auto &running = Get().m_Running;
 	while (running)
-	{
-		ImGuiLayer::BeginFrame();
-		ImGuiLayer::Update();
-
-		Renderer::BeginScene();
-		Renderer::Draw(va);
-		Renderer::EndScene();
-
-		ImGuiLayer::EndFrame();
-		window->Update();
-	}
+		DoFrame(window,va);
 
 	Renderer::Shutdown();
 	ImGuiLayer::Shutdown();
 
 	return 0;
+}
+
+void App::DoFrame(const class Window& window, const class VertexArray& vertexArray)
+{
+	ImGuiLayer::BeginFrame();
+	ImGuiLayer::Update();
+
+	Renderer::BeginScene();
+	Renderer::Draw(vertexArray);
+	Renderer::EndScene();
+
+	ImGuiLayer::EndFrame();
+	window.Update();
 }
 
 void App::ShutDown()
@@ -104,11 +107,13 @@ void App::OnEvent(Event &e)
 			}))
 		return;
 		
-	if (e.Dispatch<ResizeEvent>([](ResizeEvent &e) {
-				Renderer::SetViewport(e.Width,e.Height);
-				return false;
-			}))
-		return;
+	e.Dispatch<ResizeEvent>([](ResizeEvent &e) {
+		Renderer::SetViewport(e.Width,e.Height);
+#ifdef PLATFORM_WINDOWS
+		DoFrame(*Get().m_Window, *Get().m_Va);
+#endif
+		return false;
+	});
 
 	e.Dispatch<KeyEvent>([](KeyEvent &e) {
 		if (e.Code == GLFW_KEY_ESCAPE)
@@ -120,6 +125,9 @@ void App::OnEvent(Event &e)
 		else
 			return false;
 	});
+
+	if (e.IsHandled())
+		return;
 }
 
 Window &App::GetWindow() const

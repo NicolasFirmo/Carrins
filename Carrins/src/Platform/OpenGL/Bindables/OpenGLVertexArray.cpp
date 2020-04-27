@@ -61,7 +61,6 @@ unsigned OpenGLVertexArray::GetGLType(VertexLayout::Attribute::T type) const noe
 	NIC_ASSERT(false, "Bad vertex attribute type");
 	return 0;
 }
-
 unsigned char OpenGLVertexArray::GetGLNormalized(VertexLayout::Attribute::T type) const noexcept
 {
 	using T = VertexLayout::Attribute::T;
