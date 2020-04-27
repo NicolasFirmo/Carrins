@@ -74,7 +74,7 @@ App::App() : m_Window(Window::Create(640, 480, "Carrins"))
 	m_Shdr = Shader::Create("Assets/Shaders/BasicShader.glsl");
 	m_Shdr->Bind();
 
-	m_Projection = glm::perspective(s_Fov, float(m_Window->GetWidth()) / float(m_Window->GetHeight()), 0.1f, 150.0f);
+	m_Projection = glm::perspective(s_Fov, float(m_Window->GetWidth()) / float(m_Window->GetHeight()), 0.01f, 150.0f);
 	m_View = glm::translate(m_View, { 0.0f, 0.0f, -3.0f });
 	m_View = glm::rotate(m_View, glm::pi<float>() / 4, { 1.0f, 0.0f, 0.0f });
 	m_View = glm::rotate(m_View, -glm::pi<float>() / 4, { 0.0f, 1.0f, 0.0f });
@@ -114,6 +114,7 @@ void App::DoFrame(float dt, class Window& window, const class VertexArray& verte
 {
 	// input stuff
 	ControllCamera(dt);
+	UpdateViewProjection();
 
 	ImGuiLayer::BeginFrame();
 	bool vSync = window.IsVSync();
@@ -122,6 +123,9 @@ void App::DoFrame(float dt, class Window& window, const class VertexArray& verte
 
 	Renderer::BeginScene();
 	Renderer::Draw(vertexArray);
+	Get().m_Shdr->SetUniformMat4("u_ModelTransform",glm::translate(glm::mat4(1.0f), { 0.5f, 0.5f, 0.5f }));
+	Renderer::Draw(vertexArray);
+	Get().m_Shdr->SetUniformMat4("u_ModelTransform",glm::mat4(1.0f));
 	Renderer::EndScene();
 
 	ImGuiLayer::EndFrame();
@@ -137,56 +141,26 @@ void App::ControllCamera(float dt)
 		dt *= 0.5f;
 
 	if (Input::IsKeyPressed(GLFW_KEY_W))
-	{
 		view = glm::translate(glm::mat4(1.0f), { 0.0f, 0.0f, dt }) * view;
-		App::UpdateViewProjection();
-	}
 	else if (Input::IsKeyPressed(GLFW_KEY_S))
-	{
 		view = glm::translate(glm::mat4(1.0f), { 0.0f, 0.0f, -dt }) * view;
-		App::UpdateViewProjection();
-	}
 	if (Input::IsKeyPressed(GLFW_KEY_D))
-	{
 		view = glm::translate(glm::mat4(1.0f), { -dt, 0.0f, 0.0f }) * view;
-		App::UpdateViewProjection();
-	}
 	else if (Input::IsKeyPressed(GLFW_KEY_A))
-	{
 		view = glm::translate(glm::mat4(1.0f), { dt, 0.0f, 0.0f }) * view;
-		App::UpdateViewProjection();
-	}
 
 	if (Input::IsKeyPressed(GLFW_KEY_Q))
-	{
 		view = glm::rotate(glm::mat4(1.0f), -dt, { 0.0f, 0.0f, 1.0f }) * view;
-		App::UpdateViewProjection();
-	}
 	else if (Input::IsKeyPressed(GLFW_KEY_E))
-	{
 		view = glm::rotate(glm::mat4(1.0f), dt, { 0.0f, 0.0f, 1.0f }) * view;
-		App::UpdateViewProjection();
-	}
 	if (Input::IsKeyPressed(GLFW_KEY_UP))
-	{
 		view = glm::rotate(glm::mat4(1.0f), dt, { 1.0f, 0.0f, 0.0f }) * view;
-		App::UpdateViewProjection();
-	}
 	else if (Input::IsKeyPressed(GLFW_KEY_DOWN))
-	{
 		view = glm::rotate(glm::mat4(1.0f), -dt, { 1.0f, 0.0f, 0.0f }) * view;
-		App::UpdateViewProjection();
-	}
 	if (Input::IsKeyPressed(GLFW_KEY_RIGHT))
-	{
 		view = glm::rotate(glm::mat4(1.0f), dt, { 0.0f, 1.0f, 0.0f }) * view;
-		App::UpdateViewProjection();
-	}
 	else if (Input::IsKeyPressed(GLFW_KEY_LEFT))
-	{
 		view = glm::rotate(glm::mat4(1.0f), -dt, { 0.0f, 1.0f, 0.0f }) * view;
-		App::UpdateViewProjection();
-	}
 }
 
 void App::ShutDown()
@@ -196,7 +170,7 @@ void App::ShutDown()
 
 void App::UpdateViewProjection()
 {
-	Get().m_Projection = glm::perspective(s_Fov, float(Get().m_Window->GetWidth()) / float(Get().m_Window->GetHeight()), 0.1f, 150.0f);
+	Get().m_Projection = glm::perspective(s_Fov, float(Get().m_Window->GetWidth()) / float(Get().m_Window->GetHeight()), 0.01f, 150.0f);
 	Get().m_Shdr->SetUniformMat4("u_ViewProjection", Get().m_Projection * Get().m_View);
 }
 
@@ -212,7 +186,7 @@ void App::OnEvent(Event& e)
 			if (e.Height && e.Width)
 			{
 				Renderer::SetViewport(e.Width, e.Height);
-				Get().m_Projection = glm::perspective(s_Fov, float(e.Width) / float(e.Height), 0.1f, 150.0f);
+				Get().m_Projection = glm::perspective(s_Fov, float(e.Width) / float(e.Height), 0.01f, 150.0f);
 				Get().m_Shdr->SetUniformMat4("u_ViewProjection", Get().m_Projection * Get().m_View);
 #ifdef PLATFORM_WINDOWS
 				DoFrame(Get().m_Dt, *Get().m_Window, *Get().m_Va);

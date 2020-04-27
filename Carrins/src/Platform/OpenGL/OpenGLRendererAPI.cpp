@@ -26,11 +26,16 @@ void OpenGLRendererAPI::EnableFaceCulling(WindingOrder order) const
 		break;
 	}
 }
+void OpenGLRendererAPI::EnableDepthTesting() const
+{
+	GLCall(glEnable(GL_DEPTH_TEST));
+	GLCall(glDepthFunc(GL_LESS)); // Not Necessary but lets be explicit
+}
 void OpenGLRendererAPI::Draw(const VertexArray &vertexArray) const
 {
 	GLCall(glDrawElements(GL_TRIANGLES, vertexArray.GetIndexCount(), GL_UNSIGNED_INT, nullptr));
 }
 void OpenGLRendererAPI::Clear() const
 {
-	GLCall(glClear(GL_COLOR_BUFFER_BIT));
+	GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 }
