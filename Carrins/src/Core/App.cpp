@@ -17,6 +17,8 @@
 
 #include <glm/gtc/matrix_transform.hpp> // Projection Matrices
 
+#include <Instrumentation/Profile.h>
+
 App App::s_Instance;
 
 static float s_Fov = glm::radians(80.0f);
@@ -26,8 +28,16 @@ App& App::Get()
 	return s_Instance;
 }
 
+App::~App()
+{
+	NIC_PROFILE_END_SESSION();
+}
+
 App::App() : m_Window(Window::Create(640, 480, "Carrins"))
 {
+	NIC_PROFILE_BEGIN_SESSION("Carrins", "Profile.json");
+	NIC_PROFILE_FUNCTION();
+
 	m_Window->SetEventCallback([](Event& e) { Get().OnEvent(e); });
 
 	struct Vertex
@@ -87,22 +97,40 @@ App::App() : m_Window(Window::Create(640, 480, "Carrins"))
 
 int App::Run()
 {
+	NIC_PROFILE_FUNCTION();
+
 	auto& window = *Get().m_Window;
-	auto& va = *Get().m_Va;
 
 	Renderer::Init();
 	ImGuiLayer::Init(reinterpret_cast<GLFWwindow*>(window.GetNativeWindow()), glsl_version);
 
+	auto& running = Get().m_Running;
+
+	std::thread cameraCtrlThread([&running]() {
+		float dt = 0.0f;
+		std::chrono::time_point<std::chrono::high_resolution_clock> tp = std::chrono::high_resolution_clock::now();
+		while (running)
+		{
+			dt = (std::chrono::high_resolution_clock::now() - tp).count() / 1000000000.0f;
+			tp = std::chrono::high_resolution_clock::now();
+			ControllCamera(dt);
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		}
+		}
+	);
+
+	auto& va = *Get().m_Va;
+
 	auto& dt = Get().m_Dt;
 	std::chrono::time_point<std::chrono::high_resolution_clock> tp = std::chrono::high_resolution_clock::now();
-
-	auto& running = Get().m_Running;
 	while (running)
 	{
+		NIC_PROFILE_SCOPE("Run Loop");
 		dt = (std::chrono::high_resolution_clock::now() - tp).count() / 1000000000.0f;
 		tp = std::chrono::high_resolution_clock::now();
 		DoFrame(dt, window, va);
 	}
+	cameraCtrlThread.join();
 
 	Renderer::Shutdown();
 	ImGuiLayer::Shutdown();
@@ -112,9 +140,11 @@ int App::Run()
 
 void App::DoFrame(float dt, class Window& window, const class VertexArray& vertexArray)
 {
+	NIC_PROFILE_FUNCTION();
+
 	// input stuff
-	ControllCamera(dt);
 	UpdateViewProjection();
+	UpdateImGuiLayerState(Get().m_ImGuiLayerShouldToggle);
 
 	ImGuiLayer::BeginFrame();
 	bool vSync = window.IsVSync();
@@ -123,9 +153,9 @@ void App::DoFrame(float dt, class Window& window, const class VertexArray& verte
 
 	Renderer::BeginScene();
 	Renderer::Draw(vertexArray);
-	Get().m_Shdr->SetUniformMat4("u_ModelTransform",glm::translate(glm::mat4(1.0f), { 0.5f, 0.5f, 0.5f }));
+	Get().m_Shdr->SetUniformMat4("u_ModelTransform", glm::translate(glm::mat4(1.0f), { 0.5f, 0.5f, 0.5f }));
 	Renderer::Draw(vertexArray);
-	Get().m_Shdr->SetUniformMat4("u_ModelTransform",glm::mat4(1.0f));
+	Get().m_Shdr->SetUniformMat4("u_ModelTransform", glm::mat4(1.0f));
 	Renderer::EndScene();
 
 	ImGuiLayer::EndFrame();
@@ -135,6 +165,8 @@ void App::DoFrame(float dt, class Window& window, const class VertexArray& verte
 
 void App::ControllCamera(float dt)
 {
+	NIC_PROFILE_FUNCTION(); // ~ 1,505ms Debug | 0,558 Release - InputPooling with glfw is heavy
+
 	auto& view = Get().m_View;
 
 	if (Input::IsKeyPressed(GLFW_KEY_LEFT_SHIFT))
@@ -165,67 +197,99 @@ void App::ControllCamera(float dt)
 
 void App::ShutDown()
 {
+	NIC_PROFILE_FUNCTION();
+
 	Get().m_Running = false;
 }
 
 void App::UpdateViewProjection()
 {
+	NIC_PROFILE_FUNCTION();
+
 	Get().m_Projection = glm::perspective(s_Fov, float(Get().m_Window->GetWidth()) / float(Get().m_Window->GetHeight()), 0.01f, 150.0f);
 	Get().m_Shdr->SetUniformMat4("u_ViewProjection", Get().m_Projection * Get().m_View);
 }
 
+void App::UpdateImGuiLayerState(bool shouldToggle)
+{
+	if (shouldToggle)
+	{
+		DebugLog("Toggling ImGuiLayer\n");
+		NIC_PROFILE_SCOPE("Toggling ImGuiLayer");
+
+		ImGuiLayer::Toggle(reinterpret_cast<GLFWwindow*>(Get().m_Window->GetNativeWindow()), glsl_version);
+		Get().m_ImGuiLayerShouldToggle = false;
+	}
+}
+
 void App::OnEvent(Event& e)
 {
-	if (e.Dispatch<CloseEvent>([](CloseEvent& e) {
+	NIC_PROFILE_FUNCTION();
+
+	e.Dispatch<CloseEvent>([](CloseEvent& e) {
+		NIC_PROFILE_SCOPE("App CloseEvent dispatch");
 		App::ShutDown();
 		return true;
-		}))
+		}
+	);
+	if (e.IsHandled())
 		return;
 
-		e.Dispatch<ResizeEvent>([](ResizeEvent& e) {
-			if (e.Height && e.Width)
-			{
-				Renderer::SetViewport(e.Width, e.Height);
-				Get().m_Projection = glm::perspective(s_Fov, float(e.Width) / float(e.Height), 0.01f, 150.0f);
-				Get().m_Shdr->SetUniformMat4("u_ViewProjection", Get().m_Projection * Get().m_View);
+	e.Dispatch<ResizeEvent>([](ResizeEvent& e) {
+		NIC_PROFILE_SCOPE("App ResizeEvent dispatch");
+		if (e.Height && e.Width)
+		{
+			Renderer::SetViewport(e.Width, e.Height);
+			Get().m_Projection = glm::perspective(s_Fov, float(e.Width) / float(e.Height), 0.01f, 150.0f);
+			Get().m_Shdr->SetUniformMat4("u_ViewProjection", Get().m_Projection * Get().m_View);
 #ifdef PLATFORM_WINDOWS
-				DoFrame(Get().m_Dt, *Get().m_Window, *Get().m_Va);
+			DoFrame(Get().m_Dt, *Get().m_Window, *Get().m_Va);
 #endif
+			return true;
+		}
+		return false;
+		}
+	);
+
+	e.Dispatch<KeyEvent>([](KeyEvent& e) {
+		NIC_PROFILE_SCOPE("App KeyEvent dispatch");
+		if (e.Type == KeyEvent::T::Pressed)
+		{
+			switch (e.Code)
+			{
+			case GLFW_KEY_ESCAPE:
+			{
+				App::ShutDown();
+				DebugLog("Application closed on esc\n");
 				return true;
 			}
-			return false;
-			});
-
-		e.Dispatch<KeyEvent>([](KeyEvent& e) {
-			if (e.Type == KeyEvent::T::Pressed)
+			case GLFW_KEY_F11:
+			case GLFW_KEY_F:
 			{
-				switch (e.Code)
-				{
-				case GLFW_KEY_ESCAPE:
-				{
-					App::ShutDown();
-					DebugLog("Application closed on esc\n");
-					return true;
-				}
-				case GLFW_KEY_F11:
-				case GLFW_KEY_F:
-				{
-					Get().GetWindow().ToggleFullScreen();
-					return true;
-				}
-				default:
-					return false;
-				}
+				Get().GetWindow().ToggleFullScreen();
+				return true;
 			}
-			else
+			case GLFW_KEY_F1:
+			{
+				Get().m_ImGuiLayerShouldToggle = true;
+				return true;
+			}
+			default:
 				return false;
-			});
+			}
+		}
+		else
+			return false;
+		}
+	);
 
-		if (e.IsHandled())
-			return;
+	if (e.IsHandled())
+		return;
 }
 
 Window& App::GetWindow() const
 {
+	NIC_PROFILE_FUNCTION();
+
 	return *m_Window;
 }

@@ -2,10 +2,14 @@
 #include <GLFW/glfw3.h>
 #include "Core/App.h"
 
+#include "Instrumentation/Profile.h"
+
 std::unique_ptr<Input> Input::s_Instance = std::make_unique<glfwInput>();
 
 bool glfwInput::IsKeyPressed_(int keycode) const
 {
+	NIC_PROFILE_FUNCTION();
+
 	auto window = static_cast<GLFWwindow *>(App::Get().GetWindow().GetNativeWindow());
 
 	auto state = glfwGetKey(window, keycode);
@@ -14,6 +18,8 @@ bool glfwInput::IsKeyPressed_(int keycode) const
 }
 bool glfwInput::IsMouseButtonPressed_(int button) const
 {
+	NIC_PROFILE_FUNCTION();
+
 	auto window = static_cast<GLFWwindow *>(App::Get().GetWindow().GetNativeWindow());
 
 	auto state = glfwGetMouseButton(window, button);
@@ -23,6 +29,8 @@ bool glfwInput::IsMouseButtonPressed_(int button) const
 
 Input::Pos glfwInput::GetMousePosition_() const
 {
+	NIC_PROFILE_FUNCTION();
+
 	auto window = static_cast<GLFWwindow *>(App::Get().GetWindow().GetNativeWindow());
 
 	double posX, posY;
@@ -32,9 +40,13 @@ Input::Pos glfwInput::GetMousePosition_() const
 }
 float glfwInput::GetMouseXPosition_() const
 {
+	NIC_PROFILE_FUNCTION();
+
 	return GetMousePosition_().X;
 }
 float glfwInput::GetMouseYPosition_() const
 {
+	NIC_PROFILE_FUNCTION();
+
 	return GetMousePosition_().Y;
 }

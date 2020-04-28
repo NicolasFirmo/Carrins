@@ -3,8 +3,17 @@
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
 
+#include "Instrumentation/Profile.h"
+
+bool ImGuiLayer::s_Enabled = false;
+
 void ImGuiLayer::Init(GLFWwindow* window, const char* glsl_version)
 {
+	NIC_PROFILE_FUNCTION();
+
+	if (s_Enabled)
+		return;
+
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
@@ -30,16 +39,38 @@ void ImGuiLayer::Init(GLFWwindow* window, const char* glsl_version)
 
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init(glsl_version);
+
+	s_Enabled = true;
 }
 void ImGuiLayer::Shutdown()
 {
+	NIC_PROFILE_FUNCTION();
+
+	if (!s_Enabled)
+		return;
+
+	s_Enabled = false;
+
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
 }
 
+void ImGuiLayer::Toggle(GLFWwindow* window, const char* glsl_version)
+{
+	if (!s_Enabled)
+		Init(window, glsl_version);
+	else
+		Shutdown();
+}
+
 void ImGuiLayer::BeginFrame()
 {
+	NIC_PROFILE_FUNCTION();
+
+	if (!s_Enabled)
+		return;
+
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
@@ -48,6 +79,11 @@ void ImGuiLayer::BeginFrame()
 }
 void ImGuiLayer::EndFrame()
 {
+	NIC_PROFILE_FUNCTION();
+
+	if (!s_Enabled)
+		return;
+
 	ImGuiIO& io = ImGui::GetIO();
 
 	ImGui::Render();
@@ -67,6 +103,11 @@ void ImGuiLayer::EndFrame()
 
 void ImGuiLayer::Update(float dt, float& fov, bool& vSync, bool& fullScreen)
 {
+	NIC_PROFILE_FUNCTION();
+
+	if (!s_Enabled)
+		return;
+
 	if (ImGui::Begin("Camera"))
 	{
 		ImGui::SliderAngle("Campo de visão", &fov, 0.0f, 180.0f, "%.0f°");

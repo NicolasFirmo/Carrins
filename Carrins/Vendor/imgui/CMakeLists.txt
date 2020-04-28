@@ -3,9 +3,7 @@ ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/*.h
 )
 
-add_library(imgui
-	${IMGUI_SOURCES}
-)
+add_library(imgui ${IMGUI_SOURCES})
 
 target_compile_definitions(imgui PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLAD)
 target_link_libraries(imgui glad)

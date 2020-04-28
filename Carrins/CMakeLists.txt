@@ -1,4 +1,5 @@
 find_package(OpenGL REQUIRED)
+find_package(Threads REQUIRED)
 
 add_subdirectory(Vendor/glad)
  
@@ -27,6 +28,8 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE GLFW_INCLUDE_NONE)
 target_include_directories(${PROJECT_NAME} PRIVATE src)
 
 target_link_libraries(${PROJECT_NAME} OpenGL::GL)
+target_link_libraries(${PROJECT_NAME} Threads::Threads)
+
 target_link_libraries(${PROJECT_NAME} glad)
 target_link_libraries(${PROJECT_NAME} glfw)
 target_link_libraries(${PROJECT_NAME} glm)

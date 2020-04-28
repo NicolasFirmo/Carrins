@@ -9,13 +9,19 @@
 
 #include "Platform/OpenGL/OpenGLContext.h"
 
+#include "Instrumentation/Profile.h"
+
 std::unique_ptr<Window> Window::Create(int width, int height, const char* title)
 {
+	NIC_PROFILE_FUNCTION();
+
 	return std::make_unique<glfwWindow>(width, height, title);
 }
 
 glfwWindow::glfwWindow(int width, int height, const char* title) : m_WindowData({ width, height })
 {
+	NIC_PROFILE_FUNCTION();
+
 	NIC_ASSERT(glfwInit(), "glfw not Initialized");
 
 	glfwSetErrorCallback([](int code, const char* msg) {
@@ -39,12 +45,14 @@ glfwWindow::glfwWindow(int width, int height, const char* title) : m_WindowData(
 	glfwSetWindowUserPointer(m_Window, &m_WindowData);
 
 	glfwSetWindowCloseCallback(m_Window, [](GLFWwindow* window) {
+		NIC_PROFILE_SCOPE("glfw CloseCallback");
 		Data& data = *reinterpret_cast<Data*>(glfwGetWindowUserPointer(window));
 
 		CloseEvent e;
 		data.EventCallback(e);
 		});
 	glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int width, int height) {
+		NIC_PROFILE_SCOPE("glfw SizeCallback");
 		Data& data = *reinterpret_cast<Data*>(glfwGetWindowUserPointer(window));
 		data.Width = width;
 		data.Height = height;
@@ -54,6 +62,7 @@ glfwWindow::glfwWindow(int width, int height, const char* title) : m_WindowData(
 		});
 
 	glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
+		NIC_PROFILE_SCOPE("glfw KeyCallback");
 		Data& data = *reinterpret_cast<Data*>(glfwGetWindowUserPointer(window));
 
 		switch (action)
@@ -79,6 +88,7 @@ glfwWindow::glfwWindow(int width, int height, const char* title) : m_WindowData(
 		}
 		});
 	glfwSetCharCallback(m_Window, [](GLFWwindow* window, unsigned keycode) {
+		NIC_PROFILE_SCOPE("glfw CharCallback");
 		Data& data = *reinterpret_cast<Data*>(glfwGetWindowUserPointer(window));
 
 		CharEvent e{ keycode };
@@ -86,12 +96,14 @@ glfwWindow::glfwWindow(int width, int height, const char* title) : m_WindowData(
 		});
 
 	glfwSetCursorPosCallback(m_Window, [](GLFWwindow* window, double posX, double posY) {
+		NIC_PROFILE_SCOPE("glfw CursorPosCallback");
 		Data& data = *reinterpret_cast<Data*>(glfwGetWindowUserPointer(window));
 
 		MouseMoveEvent e{ (float)posX, (float)posY };
 		data.EventCallback(e);
 		});
 	glfwSetMouseButtonCallback(m_Window, [](GLFWwindow* window, int button, int action, int mods) {
+		NIC_PROFILE_SCOPE("glfw MouseButtonCallback");
 		Data& data = *reinterpret_cast<Data*>(glfwGetWindowUserPointer(window));
 
 		switch (action)
@@ -111,6 +123,7 @@ glfwWindow::glfwWindow(int width, int height, const char* title) : m_WindowData(
 		}
 		});
 	glfwSetScrollCallback(m_Window, [](GLFWwindow* window, double deltaX, double deltaY) {
+		NIC_PROFILE_SCOPE("glfw ScrollCallback");
 		Data& data = *reinterpret_cast<Data*>(glfwGetWindowUserPointer(window));
 
 		MouseScrollEvent e{ (float)deltaX, (float)deltaY };
@@ -119,43 +132,61 @@ glfwWindow::glfwWindow(int width, int height, const char* title) : m_WindowData(
 }
 glfwWindow::~glfwWindow()
 {
+	NIC_PROFILE_FUNCTION();
+
 	glfwDestroyWindow(m_Window);
 	glfwTerminate();
 }
 
 void glfwWindow::SetEventCallback(const EventCallbackFn& callback)
 {
+	NIC_PROFILE_FUNCTION();
+
 	m_WindowData.EventCallback = callback;
 }
 
 void* glfwWindow::GetNativeWindow() const
 {
+	NIC_PROFILE_FUNCTION();
+
 	return m_Window;
 }
 
 int glfwWindow::GetWidth() const
 {
+	NIC_PROFILE_FUNCTION();
+
 	return m_WindowData.Width;
 }
 int glfwWindow::GetHeight() const
 {
+	NIC_PROFILE_FUNCTION();
+
 	return m_WindowData.Height;
 }
 
 bool glfwWindow::IsFullScreen() const
 {
+	NIC_PROFILE_FUNCTION();
+
 	return m_FullScreen;
 }
 void glfwWindow::ToggleFullScreen()
 {
+	NIC_PROFILE_FUNCTION();
+
 	if (m_FullScreen)
 	{
+		NIC_PROFILE_SCOPE("Going windowed");
+
 		m_FullScreen = false;
-		DebugLog("Going Window\n");
+		DebugLog("Going Windowed\n");
 		glfwSetWindowMonitor(m_Window, nullptr, 40, 40, m_WindowLastWidth, m_WindowLastHeight, GLFW_DONT_CARE);
 	}
 	else
 	{
+		NIC_PROFILE_SCOPE("Going fullScreen");
+
 		m_FullScreen = true;
 		DebugLog("Going Full\n");
 		const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
@@ -169,10 +200,14 @@ void glfwWindow::ToggleFullScreen()
 
 bool glfwWindow::IsVSync() const
 {
+	NIC_PROFILE_FUNCTION();
+
 	return m_VSync;
 }
 void glfwWindow::ToggleVSync()
 {
+	NIC_PROFILE_FUNCTION();
+
 	if (m_VSync)
 	{
 		m_VSync = false;
@@ -187,6 +222,8 @@ void glfwWindow::ToggleVSync()
 
 void glfwWindow::Update(bool vSync, bool fullScreen)
 {
+	NIC_PROFILE_FUNCTION();
+
 	if (IsVSync() != vSync)
 		ToggleVSync();
 	if (IsFullScreen() != fullScreen)

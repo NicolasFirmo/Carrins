@@ -3,8 +3,6 @@ ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c
 ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h
 )
 
-add_library(glad
-	${GLAD_SOURCES}
-)
+add_library(glad ${GLAD_SOURCES})
 
 target_include_directories(glad PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)

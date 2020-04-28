@@ -1,13 +1,19 @@
 #include "OpenGLVertexArray.h"
 #include "Platform/OpenGL/OpenGLCore.h"
 
+#include "Instrumentation/Profile.h"
+
 std::unique_ptr<VertexArray> VertexArray::Create(std::unique_ptr<VertexBuffer> &&vertexBuffer, std::unique_ptr<IndexBuffer> &&indexBuffer)
 {
+	NIC_PROFILE_FUNCTION();
+
 	return std::make_unique<OpenGLVertexArray>(std::move(vertexBuffer), std::move(indexBuffer));
 }
 
 OpenGLVertexArray::OpenGLVertexArray(std::unique_ptr<VertexBuffer> &&vertexBuffer, std::unique_ptr<IndexBuffer> &&indexBuffer) : VertexArray(std::move(vertexBuffer), std::move(indexBuffer))
 {
+	NIC_PROFILE_FUNCTION();
+
 	GLCall(glCreateVertexArrays(1, &m_Id));
 	GLCall(glBindVertexArray(m_Id));
 
@@ -16,6 +22,8 @@ OpenGLVertexArray::OpenGLVertexArray(std::unique_ptr<VertexBuffer> &&vertexBuffe
 	const auto & layout = m_VertexBuffer->GetLayout();
 	for (const auto &attrib : layout.GetAttributes())
 	{
+		NIC_PROFILE_SCOPE("Setting Attribute");
+
 		GLCall(glEnableVertexAttribArray(++idx));
 		GLCall(glVertexAttribPointer(idx, attrib.Count(), GetGLType(attrib.Type), GetGLNormalized(attrib.Type), layout.Stride(), reinterpret_cast<void *>(offset)));
 		offset += attrib.Size();
@@ -23,11 +31,15 @@ OpenGLVertexArray::OpenGLVertexArray(std::unique_ptr<VertexBuffer> &&vertexBuffe
 }
 OpenGLVertexArray::~OpenGLVertexArray()
 {
+	NIC_PROFILE_FUNCTION();
+
 	GLCall(glDeleteVertexArrays(1, &m_Id));
 }
 
 void OpenGLVertexArray::Bind() const
 {
+	NIC_PROFILE_FUNCTION();
+
 	GLCall(glBindVertexArray(m_Id));
 	m_VertexBuffer->Bind();
 	m_IndexBuffer->Bind();
@@ -37,6 +49,8 @@ void OpenGLVertexArray::Bind() const
 
 unsigned OpenGLVertexArray::GetGLType(VertexLayout::Attribute::T type) const noexcept
 {
+	NIC_PROFILE_FUNCTION();
+
 	using T = VertexLayout::Attribute::T;
 	switch (type)
 	{
@@ -65,6 +79,8 @@ unsigned OpenGLVertexArray::GetGLType(VertexLayout::Attribute::T type) const noe
 }
 unsigned char OpenGLVertexArray::GetGLNormalized(VertexLayout::Attribute::T type) const noexcept
 {
+	NIC_PROFILE_FUNCTION();
+
 	using T = VertexLayout::Attribute::T;
 	switch (type)
 	{

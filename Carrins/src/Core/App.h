@@ -6,13 +6,15 @@ class App
 {
 public:
 	static App &Get();
+	~App();
 
 	static int Run();
 	static void DoFrame(float dt, class Window& window, const class VertexArray& vertexArray);
 	static void ShutDown();
 
-	static void UpdateViewProjection();
 	static void ControllCamera(float dt);
+	static void UpdateViewProjection();
+	static void UpdateImGuiLayerState(bool shouldToggle);
 
 	void OnEvent(class Event &e);
 
@@ -26,11 +28,11 @@ private:
 	static App s_Instance;
 
 	bool m_Running = false;
-
-	std::unique_ptr<class Window> m_Window;
+	bool m_ImGuiLayerShouldToggle = false;
 
 	float m_Dt = 0.0f;
 
+	std::unique_ptr<class Window> m_Window;
 	std::unique_ptr<class VertexArray> m_Va;
 	std::unique_ptr<class Shader> m_Shdr;
 
