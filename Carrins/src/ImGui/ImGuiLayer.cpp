@@ -6,6 +6,7 @@
 #include "Instrumentation/Profile.h"
 
 bool ImGuiLayer::s_Enabled = false;
+nic::Accumulator<float,30> ImGuiLayer::s_Dts(0.016f);
 
 void ImGuiLayer::Init(GLFWwindow* window, const char* glsl_version)
 {
@@ -104,6 +105,7 @@ void ImGuiLayer::EndFrame()
 void ImGuiLayer::Update(float dt, float& fov, bool& vSync, bool& fullScreen)
 {
 	NIC_PROFILE_FUNCTION();
+	s_Dts.Push(dt);
 
 	if (!s_Enabled)
 		return;
@@ -116,7 +118,7 @@ void ImGuiLayer::Update(float dt, float& fov, bool& vSync, bool& fullScreen)
 
 	if (ImGui::Begin("App"))
 	{
-		ImGui::Text("Rodando a %.1ffps (%.3fms/frame)", 1.0f / dt, dt * 1000.0f);
+		ImGui::Text("Rodando a %.1ffps (%.3fms/frame)", 1.0f / s_Dts.Average(), s_Dts.Average() * 1000.0f);
 
 		ImGui::Columns(2);
 		ImGui::Checkbox("VSync", &vSync);

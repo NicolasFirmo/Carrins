@@ -145,7 +145,7 @@ namespace nic {
 
 } // namespace nic
 
-#define NIC_PROFILE 1
+#define NIC_PROFILE 0
 #if NIC_PROFILE
 #define NIC_PROFILE_BEGIN_SESSION(name, filepath) ::nic::Instrumentor::Get().BeginSession(name, filepath)
 #define NIC_PROFILE_END_SESSION() ::nic::Instrumentor::Get().EndSession()

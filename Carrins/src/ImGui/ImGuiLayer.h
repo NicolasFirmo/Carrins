@@ -1,6 +1,8 @@
 #pragma once
 #include <GLFW/glfw3.h>
 
+#include "Utility/Accumulator.h"
+
 class ImGuiLayer
 {
 public:
@@ -12,6 +14,8 @@ public:
 	static void EndFrame();
 
 	static void Update(float dt, float& fov, bool& vSync, bool& fullScreen);
+
 private:
 	static bool s_Enabled;
+	static nic::Accumulator<float,30> s_Dts;
 };
