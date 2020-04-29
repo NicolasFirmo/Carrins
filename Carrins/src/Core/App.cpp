@@ -103,10 +103,10 @@ void App::DoFrame(float dt, Window &window)
 
 	Renderer::BeginScene(camera);
 
-	for (int i = -10; i < 10; i++)
-		for (int j = -10; j < 10; j++)
-			for (int k = -10; k < 10; k++)
-				Renderer::DrawCube(1.5f * i, 1.5f * j, 1.5f * k);
+	for (int i = -50; i < 50; i++)
+		for (int j = -5; j < 5; j++)
+			for (int k = -50; k < 50; k++)
+				Renderer::StageCube(i * 1.5f, j * 1.5f, k * 1.5f);
 
 	Renderer::EndScene();
 

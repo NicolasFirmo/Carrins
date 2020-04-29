@@ -11,6 +11,8 @@ public:
 
 	virtual void Bind() const = 0;
 
+	VertexBuffer* GetVertexBuffer() const {return m_VertexBuffer.get();}
+
 protected:
 	std::unique_ptr<VertexBuffer> m_VertexBuffer;
 	VertexLayout m_Layout;

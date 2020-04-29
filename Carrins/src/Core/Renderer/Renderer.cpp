@@ -29,9 +29,52 @@ struct
 } static constexpr s_ClearColor;
 #endif
 
+struct Vertex
+{
+	struct
+	{
+		float x, y, z;
+	} Position;
+	struct
+	{
+		float r, g, b;
+	} Color;
+};
+
+struct Cube
+{
+	Vertex Vertices[8]{
+		{-0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f},
+		{0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 1.0f},
+		{0.5f, 0.5f, 0.5f, 1.0f, 1.0f, 1.0f},
+		{-0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 1.0f},
+
+		{-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f},
+		{0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f},
+		{0.5f, 0.5f, -0.5f, 1.0f, 1.0f, 0.0f},
+		{-0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f},
+	};		
+};
+
+static constexpr std::array<const unsigned,36> c_CubeIndices{
+	0,1,2, 2,3,0,
+	5,4,7, 7,6,5,
+	3,2,6, 6,7,3,
+	4,5,1, 1,0,4,
+	0,3,7, 7,4,0,
+	2,1,5, 5,6,2,
+};
+
+static constexpr size_t s_MaxCubesPerDraw = 100000;
+static constexpr size_t s_CubesVertexBufferSize = s_MaxCubesPerDraw * sizeof(Cube);
+static constexpr size_t s_CubesIndexCount = s_MaxCubesPerDraw * c_CubeIndices.size();
+static std::vector<Cube> s_Cubes(s_MaxCubesPerDraw);
+
 std::unique_ptr<Shader> Renderer::s_Shader = nullptr;
 std::unique_ptr<VertexArray> Renderer::s_Va = nullptr;
 std::unique_ptr<IndexBuffer> Renderer::s_Ib = nullptr;
+
+size_t Renderer::s_StagedCubesCount = 0;
 
 void Renderer::SetViewport(int width, int height)
 {
@@ -48,41 +91,13 @@ void Renderer::Init()
 	s_API->EnableFaceCulling(RendererAPI::WindingOrder::CounterClockwise);
 	s_API->SetClearColor(s_ClearColor.r, s_ClearColor.g, s_ClearColor.b, s_ClearColor.a);
 
-	struct Vertex
-	{
-		struct
-		{
-			float x, y, z;
-		} Position;
-		struct
-		{
-			float r, g, b;
-		} Color;
-	};
+	std::unique_ptr<VertexBuffer> vb = VertexBuffer::Create(s_CubesVertexBufferSize);
 
-	const Vertex vertices[] = {
-			{-0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f},
-			{0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 1.0f},
-			{0.5f, 0.5f, 0.5f, 1.0f, 1.0f, 1.0f},
-			{-0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 1.0f},
+	std::vector<unsigned> indices(s_CubesIndexCount);
+	for (size_t i = 0; i < s_MaxCubesPerDraw; i++)
+		std::transform(c_CubeIndices.begin(), c_CubeIndices.end(), indices.begin() + c_CubeIndices.size() * i, [&](auto &&idx) { return i * std::size(s_Cubes.front().Vertices) + idx; });
 
-			{-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f},
-			{0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f},
-			{0.5f, 0.5f, -0.5f, 1.0f, 1.0f, 0.0f},
-			{-0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f},
-	};
-
-	const unsigned indices[] = {
-			0,1,2, 2,3,0,
-			5,4,7, 7,6,5,
-			3,2,6, 6,7,3,
-			4,5,1, 1,0,4,
-			0,3,7, 7,4,0,
-			2,1,5, 5,6,2,
-	};
-
-	std::unique_ptr<VertexBuffer> vb = VertexBuffer::Create(vertices, sizeof(vertices));
-	s_Ib = IndexBuffer::Create(indices, std::size(indices));
+	s_Ib = IndexBuffer::Create(indices.data(), s_CubesIndexCount);
 
 	s_Va = VertexArray::Create(std::move(vb),{
 						{VertexLayout::Attribute::T::Float3},
@@ -112,18 +127,42 @@ void Renderer::BeginScene(const Camera& camera)
 	camera.Bind(*s_Shader);
 }
 
-void Renderer::DrawCube(float x, float y, float z)
+void Renderer::StageCube(float x, float y, float z)
+{
+	Cube newCube;
+
+	for (size_t i = 0; i < std::size(newCube.Vertices); i++)
+	{
+		newCube.Vertices[i].Position.x += x;
+		newCube.Vertices[i].Position.y += y;
+		newCube.Vertices[i].Position.z += z;
+	}
+	s_Cubes[s_StagedCubesCount++] = newCube;
+
+	if(s_StagedCubesCount >= s_MaxCubesPerDraw)
+		Flush();
+}
+
+void Renderer::Flush()
 {
 	NIC_PROFILE_FUNCTION();
 
-	s_Shader->SetUniformMat4("u_ModelTransform", glm::translate(glm::mat4(1.0f),{x,y,z}));
+	s_Va->GetVertexBuffer()->SetData(s_Cubes.data(), s_CubesVertexBufferSize);
 
-	s_API->Draw(*s_Ib);
+	s_API->Draw(s_CubesIndexCount);
+
+	s_StagedCubesCount = 0;
 }
 
 void Renderer::EndScene()
 {
 	NIC_PROFILE_FUNCTION();
+
+	s_Va->GetVertexBuffer()->SetData(s_Cubes.data(), s_StagedCubesCount * sizeof(Cube));
+
+	s_API->Draw(s_StagedCubesCount * c_CubeIndices.size());
+
+	s_StagedCubesCount = 0;
 }
 
 

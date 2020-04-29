@@ -1,5 +1,4 @@
 #pragma once
-#include "Bindables/IndexBuffer.h"
 
 class RendererAPI
 {
@@ -14,6 +13,6 @@ public:
 	virtual void SetViewport(int width, int height) const = 0;
 	virtual void EnableFaceCulling(WindingOrder order) const = 0;
 	virtual void EnableDepthTesting() const = 0;
-	virtual void Draw(const IndexBuffer &ib) const = 0;
+	virtual void Draw(const size_t count) const = 0;
 	virtual void Clear() const = 0;
 };

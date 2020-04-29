@@ -8,6 +8,6 @@ public:
 	virtual void SetViewport(int width, int height) const override;
 	virtual void EnableFaceCulling(WindingOrder order) const override;
 	virtual void EnableDepthTesting() const override;
-	virtual void Draw(const IndexBuffer &ib) const override;
+	virtual void Draw(const size_t count) const override;
 	virtual void Clear() const override;
 };

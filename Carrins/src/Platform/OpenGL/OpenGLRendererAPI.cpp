@@ -41,11 +41,11 @@ void OpenGLRendererAPI::EnableDepthTesting() const
 	GLCall(glEnable(GL_DEPTH_TEST));
 	GLCall(glDepthFunc(GL_LESS)); // Not Necessary but lets be explicit
 }
-void OpenGLRendererAPI::Draw(const IndexBuffer &ib) const
+void OpenGLRendererAPI::Draw(const size_t count) const
 {
 	NIC_PROFILE_FUNCTION();
 
-	GLCall(glDrawElements(GL_TRIANGLES, ib.GetCount(), GL_UNSIGNED_INT, nullptr));
+	GLCall(glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr));
 }
 void OpenGLRendererAPI::Clear() const
 {
