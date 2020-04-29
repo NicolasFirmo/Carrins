@@ -29,6 +29,7 @@ glfwWindow::glfwWindow(int width, int height, const char* title) : m_WindowData(
 		});
 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_SAMPLES, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
@@ -140,35 +141,25 @@ glfwWindow::~glfwWindow()
 
 void glfwWindow::SetEventCallback(const EventCallbackFn& callback)
 {
-	NIC_PROFILE_FUNCTION();
-
 	m_WindowData.EventCallback = callback;
 }
 
 void* glfwWindow::GetNativeWindow() const
 {
-	NIC_PROFILE_FUNCTION();
-
 	return m_Window;
 }
 
 int glfwWindow::GetWidth() const
 {
-	NIC_PROFILE_FUNCTION();
-
 	return m_WindowData.Width;
 }
 int glfwWindow::GetHeight() const
 {
-	NIC_PROFILE_FUNCTION();
-
 	return m_WindowData.Height;
 }
 
 bool glfwWindow::IsFullScreen() const
 {
-	NIC_PROFILE_FUNCTION();
-
 	return m_FullScreen;
 }
 void glfwWindow::ToggleFullScreen()
@@ -200,8 +191,6 @@ void glfwWindow::ToggleFullScreen()
 
 bool glfwWindow::IsVSync() const
 {
-	NIC_PROFILE_FUNCTION();
-
 	return m_VSync;
 }
 void glfwWindow::ToggleVSync()

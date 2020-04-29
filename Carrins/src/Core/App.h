@@ -1,6 +1,5 @@
 #pragma once
 #include "Window.h"
-#include <glm/glm.hpp>
 
 class App
 {
@@ -9,15 +8,16 @@ public:
 	~App();
 
 	static int Run();
-	static void DoFrame(float dt, class Window& window, const class VertexArray& vertexArray);
 	static void ShutDown();
+
+	static void DoFrame(float dt, Window& window);
 
 	static void ControllCamera(float dt);
 	static void UpdateImGuiLayerState(bool shouldToggle);
 
 	void OnEvent(class Event &e);
 
-	class Window &GetWindow() const;
+	Window &GetWindow() const;
 
 private:
 	App();
@@ -31,9 +31,7 @@ private:
 
 	float m_Dt = 0.0f;
 
-	std::unique_ptr<class Window> m_Window;
-	std::unique_ptr<class VertexArray> m_Va;
-	std::unique_ptr<class Shader> m_Shdr;
+	std::unique_ptr<Window> m_Window;
 
 	std::unique_ptr<class PerspectiveCamera> m_Camera;
 };

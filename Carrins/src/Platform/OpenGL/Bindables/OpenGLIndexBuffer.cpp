@@ -27,7 +27,5 @@ OpenGLIndexBuffer::~OpenGLIndexBuffer()
 
 void OpenGLIndexBuffer::Bind() const
 {
-	NIC_PROFILE_FUNCTION();
-
 	GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_Id));
 }

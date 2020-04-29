@@ -2,6 +2,9 @@
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtc/matrix_transform.hpp> // Projection Matrices
 
+#include "Utility/MathConstants.hpp"
+#include "Utility/NumberManipulation.hpp"
+
 #include "Instrumentation/Profile.h"
 
 PerspectiveCamera::PerspectiveCamera(const Position &pos, const Orientation &ori, float fov, float aspectRation)
@@ -9,7 +12,7 @@ PerspectiveCamera::PerspectiveCamera(const Position &pos, const Orientation &ori
 {
 }
 
-void PerspectiveCamera::Bind(Shader& shader) const
+void PerspectiveCamera::Bind(Shader &shader) const
 {
 	NIC_PROFILE_FUNCTION();
 
@@ -25,45 +28,33 @@ void PerspectiveCamera::Bind(Shader& shader) const
 
 void PerspectiveCamera::SetPosition(float x, float y, float z)
 {
-	NIC_PROFILE_FUNCTION();
-
 	m_Position.X = x;
 	m_Position.Y = y;
 	m_Position.Z = z;
 }
-void PerspectiveCamera::SetOrientation(float pitch, float yaw)
-{
-	NIC_PROFILE_FUNCTION();
-
-	m_Orientation.Pitch = pitch;
-	m_Orientation.Yaw = yaw;
-}
-
 void PerspectiveCamera::TransformPosition(float dX, float dY, float dZ)
 {
-	NIC_PROFILE_FUNCTION();
-
 	m_Position.X += dX * std::cos(m_Orientation.Yaw) + dZ * std::sin(m_Orientation.Yaw);
 	m_Position.Y += dY;
 	m_Position.Z += -dX * std::sin(m_Orientation.Yaw) + dZ * std::cos(m_Orientation.Yaw);
 }
+
+void PerspectiveCamera::SetOrientation(float pitch, float yaw)
+{
+	m_Orientation.Pitch = nic::Clamp(pitch, nic::PI / 2, -nic::PI / 2);
+	m_Orientation.Yaw = nic::Wrap(yaw, nic::PI, -nic::PI);
+}
 void PerspectiveCamera::TransformOrientation(float dPitch, float dYaw)
 {
-	NIC_PROFILE_FUNCTION();
-
-	m_Orientation.Pitch += dPitch;
-	m_Orientation.Yaw += dYaw;
+	m_Orientation.Pitch = nic::Clamp(m_Orientation.Pitch + dPitch, nic::PI / 2, -nic::PI / 2);
+	m_Orientation.Yaw = nic::Wrap(m_Orientation.Yaw + dYaw, nic::PI, -nic::PI);
 }
 
 void PerspectiveCamera::SetFOV(float fov)
 {
-	NIC_PROFILE_FUNCTION();
-
 	m_FOV = fov;
 }
 void PerspectiveCamera::SetAspectRatio(float aspectRatio)
 {
-	NIC_PROFILE_FUNCTION();
-
 	m_AspectRatio = aspectRatio;
 }

@@ -105,6 +105,7 @@ void ImGuiLayer::EndFrame()
 void ImGuiLayer::Update(float dt, float& fov, bool& vSync, bool& fullScreen)
 {
 	NIC_PROFILE_FUNCTION();
+	
 	s_Dts.Push(dt);
 
 	if (!s_Enabled)

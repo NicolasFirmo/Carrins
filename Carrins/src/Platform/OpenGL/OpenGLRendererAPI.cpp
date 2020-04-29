@@ -13,11 +13,11 @@ void OpenGLRendererAPI::SetClearColor(const float r, const float g, const float 
 
 	GLCall(glClearColor(r, g, b, a));
 }
-void OpenGLRendererAPI::SetViewport(int width,int height) const
+void OpenGLRendererAPI::SetViewport(int width, int height) const
 {
 	NIC_PROFILE_FUNCTION();
 
-	GLCall(glViewport(0,0,width,height));
+	GLCall(glViewport(0, 0, width, height));
 }
 void OpenGLRendererAPI::EnableFaceCulling(WindingOrder order) const
 {
@@ -41,11 +41,11 @@ void OpenGLRendererAPI::EnableDepthTesting() const
 	GLCall(glEnable(GL_DEPTH_TEST));
 	GLCall(glDepthFunc(GL_LESS)); // Not Necessary but lets be explicit
 }
-void OpenGLRendererAPI::Draw(const VertexArray &vertexArray) const
+void OpenGLRendererAPI::Draw(const IndexBuffer &ib) const
 {
 	NIC_PROFILE_FUNCTION();
 
-	GLCall(glDrawElements(GL_TRIANGLES, vertexArray.GetIndexCount(), GL_UNSIGNED_INT, nullptr));
+	GLCall(glDrawElements(GL_TRIANGLES, ib.GetCount(), GL_UNSIGNED_INT, nullptr));
 }
 void OpenGLRendererAPI::Clear() const
 {

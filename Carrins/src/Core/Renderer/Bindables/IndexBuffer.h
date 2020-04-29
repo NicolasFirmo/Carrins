@@ -8,6 +8,7 @@ public:
 	virtual ~IndexBuffer() = default;
 
 	virtual void Bind() const = 0;
+	
 	size_t GetCount() const { return m_Count; }
 
 protected:

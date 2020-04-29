@@ -3,23 +3,24 @@
 
 #include "Instrumentation/Profile.h"
 
-std::unique_ptr<VertexArray> VertexArray::Create(std::unique_ptr<VertexBuffer> &&vertexBuffer, std::unique_ptr<IndexBuffer> &&indexBuffer)
+std::unique_ptr<VertexArray> VertexArray::Create(std::unique_ptr<VertexBuffer> &&vertexBuffer,const VertexLayout& layout)
 {
 	NIC_PROFILE_FUNCTION();
 
-	return std::make_unique<OpenGLVertexArray>(std::move(vertexBuffer), std::move(indexBuffer));
+	return std::make_unique<OpenGLVertexArray>(std::move(vertexBuffer), layout);
 }
 
-OpenGLVertexArray::OpenGLVertexArray(std::unique_ptr<VertexBuffer> &&vertexBuffer, std::unique_ptr<IndexBuffer> &&indexBuffer) : VertexArray(std::move(vertexBuffer), std::move(indexBuffer))
+OpenGLVertexArray::OpenGLVertexArray(std::unique_ptr<VertexBuffer> &&vertexBuffer, const VertexLayout& layout) : VertexArray(std::move(vertexBuffer), layout)
 {
 	NIC_PROFILE_FUNCTION();
 
 	GLCall(glCreateVertexArrays(1, &m_Id));
 	GLCall(glBindVertexArray(m_Id));
 
+	m_VertexBuffer->Bind();
+
 	unsigned idx = -1;
 	size_t offset = 0;
-	const auto & layout = m_VertexBuffer->GetLayout();
 	for (const auto &attrib : layout.GetAttributes())
 	{
 		NIC_PROFILE_SCOPE("Setting Attribute");
@@ -41,16 +42,12 @@ void OpenGLVertexArray::Bind() const
 	NIC_PROFILE_FUNCTION();
 
 	GLCall(glBindVertexArray(m_Id));
-	m_VertexBuffer->Bind();
-	m_IndexBuffer->Bind();
 }
 
 // Helpers
 
 unsigned OpenGLVertexArray::GetGLType(VertexLayout::Attribute::T type) const noexcept
 {
-	NIC_PROFILE_FUNCTION();
-
 	using T = VertexLayout::Attribute::T;
 	switch (type)
 	{
@@ -79,8 +76,6 @@ unsigned OpenGLVertexArray::GetGLType(VertexLayout::Attribute::T type) const noe
 }
 unsigned char OpenGLVertexArray::GetGLNormalized(VertexLayout::Attribute::T type) const noexcept
 {
-	NIC_PROFILE_FUNCTION();
-
 	using T = VertexLayout::Attribute::T;
 	switch (type)
 	{

@@ -49,44 +49,32 @@ void OpenGLShader::Bind() const
 
 void OpenGLShader::SetUniformFloat(const std::string &name, const float value)
 {
-	NIC_PROFILE_FUNCTION();
-
 	GLint location = GetUniformCachedLocation(name);
 	GLCall(glUniform1f(location, value));
 }
 void OpenGLShader::SetUniformFloat2(const std::string &name, const glm::vec2 &value)
 {
-	NIC_PROFILE_FUNCTION();
-
 	GLint location = GetUniformCachedLocation(name);
 	GLCall(glUniform2f(location, value[0], value[1]));
 }
 void OpenGLShader::SetUniformFloat3(const std::string &name, const glm::vec3 &value)
 {
-	NIC_PROFILE_FUNCTION();
-
 	GLint location = GetUniformCachedLocation(name);
 	GLCall(glUniform3f(location, value[0], value[1], value[2]));
 }
 void OpenGLShader::SetUniformFloat4(const std::string &name, const glm::vec4 &value)
 {
-	NIC_PROFILE_FUNCTION();
-
 	GLint location = GetUniformCachedLocation(name);
 	GLCall(glUniform4f(location, value[0], value[1], value[2], value[3]));
 }
 
 void OpenGLShader::SetUniformMat3(const std::string &name, const glm::mat3 &value)
 {
-	NIC_PROFILE_FUNCTION();
-
 	GLint location = GetUniformCachedLocation(name);
 	GLCall(glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(value)));
 }
 void OpenGLShader::SetUniformMat4(const std::string &name, const glm::mat4 &value)
 {
-	NIC_PROFILE_FUNCTION();
-
 	GLint location = GetUniformCachedLocation(name);
 	GLCall(glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value)));
 }
@@ -156,17 +144,13 @@ unsigned OpenGLShader::CompileShader(unsigned type, const char *source) const
 
 int OpenGLShader::GetUniformCachedLocation(const std::string &name)
 {
-	NIC_PROFILE_FUNCTION();
-
 	if (m_UniformLocations.find(name) != m_UniformLocations.end())
 	{
-		NIC_PROFILE_SCOPE("From Cache");
-
 		return m_UniformLocations[name];
 	}
 	else
 	{
-		NIC_PROFILE_SCOPE("From OpenGL");
+		NIC_PROFILE_SCOPE("Get uniform location from OpenGL");
 
 		GLCall(int location = m_UniformLocations[name] = glGetUniformLocation(m_Id, name.c_str()));
 		return location;
