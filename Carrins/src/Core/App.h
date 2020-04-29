@@ -13,7 +13,6 @@ public:
 	static void ShutDown();
 
 	static void ControllCamera(float dt);
-	static void UpdateViewProjection();
 	static void UpdateImGuiLayerState(bool shouldToggle);
 
 	void OnEvent(class Event &e);
@@ -36,7 +35,5 @@ private:
 	std::unique_ptr<class VertexArray> m_Va;
 	std::unique_ptr<class Shader> m_Shdr;
 
-	// Camera
-	glm::mat4 m_Projection = glm::mat4(1.0f);
-	glm::mat4 m_View = glm::mat4(1.0f);
+	std::unique_ptr<class PerspectiveCamera> m_Camera;
 };
