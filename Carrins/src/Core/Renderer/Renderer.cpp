@@ -48,46 +48,15 @@ void Renderer::Init()
 	s_API->EnableFaceCulling(RendererAPI::WindingOrder::CounterClockwise);
 	s_API->SetClearColor(s_ClearColor.r, s_ClearColor.g, s_ClearColor.b, s_ClearColor.a);
 
-	struct Vertex
-	{
-		struct
-		{
-			float x, y, z;
-		} Position;
-		struct
-		{
-			float r, g, b;
-		} Color;
-	};
+	auto [vertices, indices] = ReadObj("Assets/Objects/Cubo.obj");
 
-	const Vertex vertices[] = {
-			{-0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f},
-			{0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 1.0f},
-			{0.5f, 0.5f, 0.5f, 1.0f, 1.0f, 1.0f},
-			{-0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 1.0f},
+	std::unique_ptr<VertexBuffer> vb = VertexBuffer::Create(vertices.data(), sizeof(Vertex) * vertices.size());
+	s_Ib = IndexBuffer::Create(indices.data(), indices.size());
 
-			{-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f},
-			{0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f},
-			{0.5f, 0.5f, -0.5f, 1.0f, 1.0f, 0.0f},
-			{-0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f},
-	};
-
-	const unsigned indices[] = {
-			0,1,2, 2,3,0,
-			5,4,7, 7,6,5,
-			3,2,6, 6,7,3,
-			4,5,1, 1,0,4,
-			0,3,7, 7,4,0,
-			2,1,5, 5,6,2,
-	};
-
-	std::unique_ptr<VertexBuffer> vb = VertexBuffer::Create(vertices, sizeof(vertices));
-	s_Ib = IndexBuffer::Create(indices, std::size(indices));
-
-	s_Va = VertexArray::Create(std::move(vb),{
+	s_Va = VertexArray::Create(std::move(vb), {
 						{VertexLayout::Attribute::T::Float3},
 						{VertexLayout::Attribute::T::Float3},
-					});
+		});
 
 	s_Shader = Shader::Create("Assets/Shaders/BasicShader.glsl");
 }
@@ -98,6 +67,187 @@ void Renderer::Shutdown()
 	s_Shader.release();
 	s_Va.release();
 	s_Ib.release();
+}
+
+std::pair<std::vector<Renderer::Vertex>, std::vector<unsigned>> Renderer::ReadObj(const std::string& filepath)
+{
+	NIC_PROFILE_FUNCTION();
+
+	std::ifstream objFile(filepath);
+	std::ifstream mtlFile(filepath.substr(0, filepath.size() - 3) + "mtl");
+
+	std::vector<Vertex::Vec3> positions;
+	std::vector<Vertex::Vec3> normals;
+
+	std::unordered_map<std::string, int> verticesMap;
+
+	std::vector<Vertex::RGBA> colors;
+
+	std::vector<Vertex> vertices;
+	std::vector<unsigned> indices;
+
+	std::string line;
+
+	// mtl
+
+	while (std::getline(mtlFile, line))
+		if (line.find("newmtl") != std::string::npos)
+		{
+			do
+			{
+				std::getline(mtlFile, line);
+			} while (line[0] != 'k' && line[1] != 'd');
+
+			std::istringstream iss(line);
+			std::vector<std::string> results((std::istream_iterator<std::string>(iss)),
+				std::istream_iterator<std::string>());
+
+			colors.push_back({ unsigned char(std::stof(results[1]) * 255),unsigned char(std::stof(results[2]) * 255) ,unsigned char(std::stof(results[3]) * 255),255 });
+		}
+
+	// obj
+
+	do
+	{
+		std::getline(objFile, line);
+	} while (line[0] != 'o');
+
+
+	int idx = 0;
+	do
+	{
+		std::getline(objFile, line);
+
+		// positions
+
+		do
+		{
+			std::istringstream iss(line);
+			std::vector<std::string> results((std::istream_iterator<std::string>(iss)),
+				std::istream_iterator<std::string>());
+
+			positions.push_back({ std::stof(results[1]),std::stof(results[2]) ,std::stof(results[3]) });
+
+			std::getline(objFile, line);
+
+		} while (line[0] == 'v' && line[1] == ' ');
+
+		// normals
+
+		do
+		{
+			std::istringstream iss(line);
+			std::vector<std::string> results((std::istream_iterator<std::string>(iss)),
+				std::istream_iterator<std::string>());
+
+			normals.push_back({ std::stof(results[1]),std::stof(results[2]) ,std::stof(results[3]) });
+
+			std::getline(objFile, line);
+
+		} while (line[0] == 'v' && line[1] == 'n');
+
+		// faces & indices
+
+		do
+		{
+			std::getline(objFile, line);
+		} while (line[0] != 'f');
+
+		do
+		{
+			std::istringstream iss(line);
+			std::vector<std::string> results((std::istream_iterator<std::string>(iss)),
+				std::istream_iterator<std::string>());
+
+			for (size_t i = 0; i < 3; i++)
+			{
+				if (verticesMap.find(results[i + 1]) == verticesMap.end())
+					verticesMap[results[i + 1]] = idx++;
+
+				indices.emplace_back(verticesMap[results[i + 1]]);
+			}
+
+			std::getline(objFile, line);
+		} while (line[0] == 'f');
+
+	} while (line[0] == 'o');
+
+	// vertices
+
+	vertices.resize(verticesMap.size());
+
+	for (const auto& vertexMap : verticesMap)
+	{
+		auto posidx = std::stoi(vertexMap.first.substr(0, vertexMap.first.find('/'))) - 1;
+		auto normalidx = std::stoi(vertexMap.first.substr(vertexMap.first.rfind('/') + 1)) - 1;
+
+		vertices[vertexMap.second] = {
+		positions[posidx],
+		normals[normalidx]
+		};
+	}
+
+	return { vertices,indices };
+}
+std::pair<std::vector<Renderer::Vertex>, std::vector<unsigned>> Renderer::ReadPly(const std::string& filepath)
+{
+	NIC_PROFILE_FUNCTION();
+
+	std::ifstream objFile(filepath);
+
+	std::vector<Vertex> vertices;
+	std::vector<unsigned> indices;
+
+	std::string line;
+	while (std::getline(objFile, line))
+	{
+		if (line.find("element vertex") != std::string::npos)
+		{
+			auto VerticeCount = std::stoi(line.substr(line.rfind(' ') + 1));
+			vertices.resize(VerticeCount);
+		}
+		else if (line.find("element face") != std::string::npos)
+		{
+			auto triangleCount = std::stoi(line.substr(line.rfind(' ') + 1));
+			indices.resize(triangleCount * 3);
+		}
+		else if (line.find("end_header") != std::string::npos)
+			break;
+	}
+
+	for (auto& v : vertices)
+	{
+		std::getline(objFile, line);
+		std::istringstream iss(line);
+		std::vector<std::string> results((std::istream_iterator<std::string>(iss)),
+			std::istream_iterator<std::string>());
+
+		v.Position.x = std::stof(results[0]);
+		v.Position.y = std::stof(results[1]);
+		v.Position.z = std::stof(results[2]);
+
+		v.Normal.x = std::stof(results[3]);
+		v.Normal.y = std::stof(results[4]);
+		v.Normal.z = std::stof(results[5]);
+
+		//v.Color.r = std::stoi(results[6]);
+		//v.Color.g = std::stoi(results[7]);
+		//v.Color.b = std::stoi(results[8]);
+		//v.Color.a = std::stoi(results[9]);
+	}
+	for (size_t i = 0; i < indices.size(); i += 3)
+	{
+		std::getline(objFile, line);
+		std::istringstream iss(line);
+		std::vector<std::string> results((std::istream_iterator<std::string>(iss)),
+			std::istream_iterator<std::string>());
+
+		indices[i + 0] = std::stof(results[1]);
+		indices[i + 1] = std::stof(results[2]);
+		indices[i + 2] = std::stof(results[3]);
+	}
+
+	return { vertices,indices };
 }
 
 void Renderer::BeginScene(const Camera& camera)
@@ -112,11 +262,11 @@ void Renderer::BeginScene(const Camera& camera)
 	camera.Bind(*s_Shader);
 }
 
-void Renderer::DrawCube(float x, float y, float z)
+void Renderer::DrawCube(const glm::mat4& transform)
 {
 	NIC_PROFILE_FUNCTION();
 
-	s_Shader->SetUniformMat4("u_ModelTransform", glm::translate(glm::mat4(1.0f),{x,y,z}));
+	s_Shader->SetUniformMat4("u_ModelTransform", transform);
 
 	s_API->Draw(*s_Ib);
 }

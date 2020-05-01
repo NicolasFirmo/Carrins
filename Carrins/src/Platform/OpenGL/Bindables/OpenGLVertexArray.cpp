@@ -69,6 +69,15 @@ unsigned OpenGLVertexArray::GetGLType(VertexLayout::Attribute::T type) const noe
 	case T::UInt4:
 		return GL_UNSIGNED_INT;
 
+	case T::UChar:
+		return GL_UNSIGNED_BYTE;
+	case T::UChar2:
+		return GL_UNSIGNED_BYTE;
+	case T::UChar3:
+		return GL_UNSIGNED_BYTE;
+	case T::UChar4:
+		return GL_UNSIGNED_BYTE;
+
 	default:
 		NIC_ASSERT(false, "Bad vertex attribute type");
 		return 0;
@@ -95,6 +104,15 @@ unsigned char OpenGLVertexArray::GetGLNormalized(VertexLayout::Attribute::T type
 	case T::UInt3:
 		return GL_TRUE;
 	case T::UInt4:
+		return GL_TRUE;
+
+	case T::UChar:
+		return GL_TRUE;
+	case T::UChar2:
+		return GL_TRUE;
+	case T::UChar3:
+		return GL_TRUE;
+	case T::UChar4:
 		return GL_TRUE;
 
 	default:

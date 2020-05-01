@@ -18,7 +18,7 @@ public:
 	};
 	struct Orientation
 	{
-		float Pitch{}, Yaw{};
+		float Pitch{}, Yaw{}, Roll{};
 	};
 
 public:
@@ -26,10 +26,10 @@ public:
 	void Bind(Shader& shader) const override;
 
 	void SetPosition(float x, float y, float z);
-	void SetOrientation(float pitch, float yaw);
+	void SetOrientation(float pitch, float yaw, float roll);
 
 	void TransformPosition(float dX, float dY, float dZ);
-	void TransformOrientation(float dPitch, float dYaw);
+	void TransformOrientation(float dPitch, float dYaw, float dRoll);
 
 	void SetFOV(float fov);
 	void SetAspectRatio(float aspectRatio);

@@ -12,11 +12,14 @@
 
 #include <Instrumentation/Profile.h>
 
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/euler_angles.hpp>
+
 App App::s_Instance;
 
 static float s_Fov = glm::radians(80.0f);
 
-App &App::Get()
+App& App::Get()
 {
 	return s_Instance;
 }
@@ -31,13 +34,13 @@ App::App() : m_Window(Window::Create(640, 480, "Carrins"))
 	NIC_PROFILE_BEGIN_SESSION("Carrins", "Profile.json");
 	NIC_PROFILE_FUNCTION();
 
-	m_Window->SetEventCallback([](Event &e) { Get().OnEvent(e); });
+	m_Window->SetEventCallback([](Event& e) { Get().OnEvent(e); });
 
 	m_Camera = std::make_unique<PerspectiveCamera>(
-			PerspectiveCamera::Position{2.0f, 2.0f, 2.0f},
-			PerspectiveCamera::Orientation{-nic::PI / 4, nic::PI / 4},
-			s_Fov,
-			float(m_Window->GetWidth()) / float(m_Window->GetHeight()));
+		PerspectiveCamera::Position{ 2.0f, 2.0f, 2.0f },
+		PerspectiveCamera::Orientation{ -nic::PI / 4, nic::PI / 4 },
+		s_Fov,
+		float(m_Window->GetWidth()) / float(m_Window->GetHeight()));
 
 	m_Running = true;
 }
@@ -46,11 +49,11 @@ int App::Run()
 {
 	NIC_PROFILE_FUNCTION();
 
-	auto &window = *Get().m_Window;
-	auto &running = Get().m_Running;
+	auto& window = *Get().m_Window;
+	auto& running = Get().m_Running;
 
 	Renderer::Init();
-	ImGuiLayer::Init(static_cast<GLFWwindow *>(window.GetNativeWindow()), glsl_version);
+	ImGuiLayer::Init(static_cast<GLFWwindow*>(window.GetNativeWindow()), glsl_version);
 
 	std::thread cameraCtrlThread([&running]() {
 		float dt = 0.0f;
@@ -62,9 +65,9 @@ int App::Run()
 			ControllCamera(dt);
 			std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		}
-	});
+		});
 
-	auto &dt = Get().m_Dt;
+	auto& dt = Get().m_Dt;
 	std::chrono::time_point<std::chrono::high_resolution_clock> tp = std::chrono::high_resolution_clock::now();
 	while (running)
 	{
@@ -88,7 +91,7 @@ void App::ShutDown()
 	Get().m_Running = false;
 }
 
-void App::DoFrame(float dt, Window &window)
+void App::DoFrame(float dt, Window& window)
 {
 	NIC_PROFILE_FUNCTION();
 
@@ -103,10 +106,10 @@ void App::DoFrame(float dt, Window &window)
 
 	Renderer::BeginScene(camera);
 
-	for (int i = -10; i < 10; i++)
-		for (int j = -10; j < 10; j++)
-			for (int k = -10; k < 10; k++)
-				Renderer::DrawCube(1.5f * i, 1.5f * j, 1.5f * k);
+	for (int i = -3; i < 3; i++)
+		for (int j = -3; j < 3; j++)
+			for (int k = -3; k < 3; k++)
+				Renderer::DrawCube(glm::translate(glm::mat4(1.0f), { 4.0f * i, 4.0f * j, 4.0f * k }) * glm::inverse(glm::eulerAngleYXZ(float(i * nic::PI / 8), float(j * nic::PI / 8), float(k * nic::PI / 8))));
 
 	Renderer::EndScene();
 
@@ -126,7 +129,7 @@ void App::DoFrame(float dt, Window &window)
 
 void App::ControllCamera(float dt)
 {
-	auto &camera = *Get().m_Camera;
+	auto& camera = *Get().m_Camera;
 
 	if (Input::IsKeyPressed(GLFW_KEY_W))
 		camera.TransformPosition(0.0f, 0.0f, -dt);
@@ -141,14 +144,18 @@ void App::ControllCamera(float dt)
 	else if (Input::IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		camera.TransformPosition(0.0f, -dt, 0.0f);
 
+	if (Input::IsKeyPressed(GLFW_KEY_Q))
+		camera.TransformOrientation(0.0f, 0.0f, dt);
+	else if (Input::IsKeyPressed(GLFW_KEY_E))
+		camera.TransformOrientation(0.0f, 0.0f, -dt);
 	if (Input::IsKeyPressed(GLFW_KEY_UP))
-		camera.TransformOrientation( dt, 0.0f);
+		camera.TransformOrientation(dt, 0.0f, 0.0f);
 	else if (Input::IsKeyPressed(GLFW_KEY_DOWN))
-		camera.TransformOrientation(-dt, 0.0f);
+		camera.TransformOrientation(-dt, 0.0f, 0.0f);
 	if (Input::IsKeyPressed(GLFW_KEY_RIGHT))
-		camera.TransformOrientation(0.0f,-dt);
+		camera.TransformOrientation(0.0f, -dt, 0.0f);
 	else if (Input::IsKeyPressed(GLFW_KEY_LEFT))
-		camera.TransformOrientation(0.0f, dt);
+		camera.TransformOrientation(0.0f, dt, 0.0f);
 }
 
 void App::UpdateImGuiLayerState(bool shouldToggle)
@@ -158,24 +165,24 @@ void App::UpdateImGuiLayerState(bool shouldToggle)
 		DebugLog("Toggling ImGuiLayer\n");
 		NIC_PROFILE_SCOPE("Toggling ImGuiLayer");
 
-		ImGuiLayer::Toggle(reinterpret_cast<GLFWwindow *>(Get().m_Window->GetNativeWindow()), glsl_version);
+		ImGuiLayer::Toggle(reinterpret_cast<GLFWwindow*>(Get().m_Window->GetNativeWindow()), glsl_version);
 		Get().m_ImGuiLayerShouldToggle = false;
 	}
 }
 
-void App::OnEvent(Event &e)
+void App::OnEvent(Event& e)
 {
 	NIC_PROFILE_FUNCTION();
 
-	e.Dispatch<CloseEvent>([](CloseEvent &e) {
+	e.Dispatch<CloseEvent>([](CloseEvent& e) {
 		NIC_PROFILE_SCOPE("App CloseEvent dispatch");
 		App::ShutDown();
 		return true;
-	});
+		});
 	if (e.IsHandled())
 		return;
 
-	e.Dispatch<ResizeEvent>([](ResizeEvent &e) {
+	e.Dispatch<ResizeEvent>([](ResizeEvent& e) {
 		NIC_PROFILE_SCOPE("App ResizeEvent dispatch");
 		if (e.Height && e.Width)
 		{
@@ -187,9 +194,9 @@ void App::OnEvent(Event &e)
 			return true;
 		}
 		return false;
-	});
+		});
 
-	e.Dispatch<KeyEvent>([](KeyEvent &e) {
+	e.Dispatch<KeyEvent>([](KeyEvent& e) {
 		NIC_PROFILE_SCOPE("App KeyEvent dispatch");
 		if (e.Type == KeyEvent::T::Pressed)
 		{
@@ -218,13 +225,13 @@ void App::OnEvent(Event &e)
 		}
 		else
 			return false;
-	});
+		});
 
 	if (e.IsHandled())
 		return;
 }
 
-Window &App::GetWindow() const
+Window& App::GetWindow() const
 {
 	return *m_Window;
 }

@@ -17,6 +17,11 @@ public:
 			UInt2,
 			UInt3,
 			UInt4,
+
+			UChar,
+			UChar2,
+			UChar3,
+			UChar4,
 		} Type;
 
 		size_t Count() const
@@ -39,6 +44,15 @@ public:
 			case T::UInt3:
 				return 3;
 			case T::UInt4:
+				return 4;
+
+			case T::UChar:
+				return 1;
+			case T::UChar2:
+				return 2;
+			case T::UChar3:
+				return 3;
+			case T::UChar4:
 				return 4;
 
 			default:
@@ -67,6 +81,15 @@ public:
 				return 3 * sizeof(unsigned);
 			case T::UInt4:
 				return 4 * sizeof(unsigned);
+
+			case T::UChar:
+				return 1 * sizeof(unsigned char);
+			case T::UChar2:
+				return 2 * sizeof(unsigned char);
+			case T::UChar3:
+				return 3 * sizeof(unsigned char);
+			case T::UChar4:
+				return 4 * sizeof(unsigned char);
 
 			default:
 				NIC_ASSERT(false, "Bad vertex attribute type");
