@@ -2,79 +2,65 @@
 #include "RendererAPI.h"
 
 #include "Bindables/VertexBuffer.h"
-#include "Bindables/IndexBuffer.h"
-#include "Bindables/VertexArray.h"
-#include "Bindables/Shader.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp> // Projection Matrices
 
 #include "Instrumentation/Profile.h"
 
-#ifndef NDEBUG
-struct
-{
-	float r = 0.0f;
-	float g = 0.5f;
-	float b = 1.0f;
-	float a = 1.0f;
-} static constexpr s_ClearColor;
-#else
-struct
-{
-	float r = 1.0f;
-	float g = 0.5f;
-	float b = 0.0f;
-	float a = 1.0f;
-} static constexpr s_ClearColor;
-#endif
-
-std::unique_ptr<Shader> Renderer::s_Shader = nullptr;
-std::unique_ptr<VertexArray> Renderer::s_Va = nullptr;
-std::unique_ptr<IndexBuffer> Renderer::s_Ib = nullptr;
-
-void Renderer::SetViewport(int width, int height)
+Renderer::Renderer(const std::string& objectName, const std::string& shaderName)
 {
 	NIC_PROFILE_FUNCTION();
 
-	RendererAPI::SetViewport(width, height);
-}
-
-void Renderer::Init()
-{
-	NIC_PROFILE_FUNCTION();
-
-	RendererAPI::EnableDepthTesting();
-	RendererAPI::EnableFaceCulling(RendererAPI::WindingOrder::CounterClockwise);
-	RendererAPI::SetClearColor(s_ClearColor.r, s_ClearColor.g, s_ClearColor.b, s_ClearColor.a);
-
-	auto [vertices, indices] = ReadObj("Assets/Objects/Cubo.obj");
+	auto [vertices, indices] = ParseObj("Assets/Objects/" + objectName);
 
 	std::unique_ptr<VertexBuffer> vb = VertexBuffer::Create(vertices.data(), sizeof(Vertex) * vertices.size());
-	s_Ib = IndexBuffer::Create(indices.data(), indices.size());
+	m_Ib = IndexBuffer::Create(indices.data(), indices.size());
 
-	s_Va = VertexArray::Create(std::move(vb), {
+	m_Va = VertexArray::Create(std::move(vb), {
 						{VertexLayout::Attribute::T::Float3},
 						{VertexLayout::Attribute::T::Float3},
 		});
 
-	s_Shader = Shader::Create("Assets/Shaders/BasicShader.glsl");
+	m_Shader = Shader::Create("Assets/Shaders/" + shaderName);
 }
-void Renderer::Shutdown()
+
+void Renderer::BeginScene(const Camera& camera)
 {
 	NIC_PROFILE_FUNCTION();
 
-	s_Shader.release();
-	s_Va.release();
-	s_Ib.release();
+	RendererAPI::Clear();
+	m_Shader->Bind();
+	m_Va->Bind();
+	m_Ib->Bind();
+
+	camera.Bind(*m_Shader);
 }
 
-std::pair<std::vector<Renderer::Vertex>, std::vector<unsigned>> Renderer::ReadObj(const std::string& filepath)
+void Renderer::DrawObject(const glm::mat4& transform)
+{
+	NIC_PROFILE_FUNCTION();
+
+	m_Shader->SetUniformMat4("u_ModelTransform", transform);
+
+	RendererAPI::Draw(m_Ib->GetCount());
+}
+
+void Renderer::EndScene()
+{
+	NIC_PROFILE_FUNCTION();
+}
+
+// Helpers
+
+std::pair<std::vector<Renderer::Vertex>, std::vector<unsigned>> Renderer::ParseObj(const std::string& filepath)
 {
 	NIC_PROFILE_FUNCTION();
 
 	std::ifstream objFile(filepath);
+	NIC_ASSERT(objFile.is_open(), "objFile \"" << filepath << "\" could not be opened");
 	std::ifstream mtlFile(filepath.substr(0, filepath.size() - 3) + "mtl");
+	NIC_ASSERT(objFile.is_open(), "mtlFile \"" << (filepath.substr(0, filepath.size() - 3) + "mtl") << "\" could not be opened");
 
 	std::vector<Vertex::Vec3> positions;
 	std::vector<Vertex::Vec3> normals;
@@ -189,11 +175,12 @@ std::pair<std::vector<Renderer::Vertex>, std::vector<unsigned>> Renderer::ReadOb
 
 	return { vertices,indices };
 }
-std::pair<std::vector<Renderer::Vertex>, std::vector<unsigned>> Renderer::ReadPly(const std::string& filepath)
+std::pair<std::vector<Renderer::Vertex>, std::vector<unsigned>> Renderer::ParsePly(const std::string& filepath) // Not being used
 {
 	NIC_PROFILE_FUNCTION();
 
 	std::ifstream objFile(filepath);
+	NIC_ASSERT(objFile.is_open(), "objFile \"" << filepath << "\" could not be opened");
 
 	std::vector<Vertex> vertices;
 	std::vector<unsigned> indices;
@@ -249,31 +236,3 @@ std::pair<std::vector<Renderer::Vertex>, std::vector<unsigned>> Renderer::ReadPl
 
 	return { vertices,indices };
 }
-
-void Renderer::BeginScene(const Camera& camera)
-{
-	NIC_PROFILE_FUNCTION();
-
-	RendererAPI::Clear();
-	s_Shader->Bind();
-	s_Va->Bind();
-	s_Ib->Bind();
-
-	camera.Bind(*s_Shader);
-}
-
-void Renderer::DrawCube(const glm::mat4& transform)
-{
-	NIC_PROFILE_FUNCTION();
-
-	s_Shader->SetUniformMat4("u_ModelTransform", transform);
-
-	RendererAPI::Draw(s_Ib->GetCount());
-}
-
-void Renderer::EndScene()
-{
-	NIC_PROFILE_FUNCTION();
-}
-
-

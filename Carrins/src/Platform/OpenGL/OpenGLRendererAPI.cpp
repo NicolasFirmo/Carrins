@@ -34,12 +34,24 @@ void OpenGLRendererAPI::EnableFaceCulling_(WindingOrder order) const
 		break;
 	}
 }
+void OpenGLRendererAPI::DisableFaceCulling_() const
+{
+	NIC_PROFILE_FUNCTION();
+
+	GLCall(glDisable(GL_CULL_FACE));
+}
 void OpenGLRendererAPI::EnableDepthTesting_() const
 {
 	NIC_PROFILE_FUNCTION();
 
 	GLCall(glEnable(GL_DEPTH_TEST));
 	GLCall(glDepthFunc(GL_LESS)); // Not Necessary but lets be explicit
+}
+void OpenGLRendererAPI::DisableDepthTesting_() const
+{
+	NIC_PROFILE_FUNCTION();
+
+	GLCall(glDisable(GL_DEPTH_TEST));
 }
 void OpenGLRendererAPI::Draw_(const size_t indexCount) const
 {

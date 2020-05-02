@@ -85,7 +85,8 @@ OpenGLShader::Sources OpenGLShader::ParseShaders(const std::string &filepath) co
 {
 	NIC_PROFILE_FUNCTION();
 
-	std::ifstream file(filepath);
+	std::ifstream shaderFile(filepath);
+	NIC_ASSERT(shaderFile.is_open(), "shaderFile \"" << filepath << "\" could not be opened");
 
 	enum
 	{
@@ -97,7 +98,7 @@ OpenGLShader::Sources OpenGLShader::ParseShaders(const std::string &filepath) co
 	std::stringstream sources[sizeof(Sources) / sizeof(Sources::Fragment)];
 
 	std::string line;
-	while (std::getline(file, line))
+	while (std::getline(shaderFile, line))
 	{
 		if (line.find("#shader") != std::string::npos)
 		{

@@ -3,5 +3,6 @@
 
 int MAIN()
 {
+	App::Init();
 	return App::Run();
 }

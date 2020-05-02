@@ -8,12 +8,31 @@
 #include "Events/MouseEvent.h"
 
 #include "Renderer/Renderer.h"
+#include "Renderer/RendererAPI.h"
 #include "ImGui/ImGuiLayer.h"
 
 #include <Instrumentation/Profile.h>
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/euler_angles.hpp>
+
+#ifndef NDEBUG
+struct
+{
+	float r = 0.0f;
+	float g = 0.5f;
+	float b = 1.0f;
+	float a = 1.0f;
+} static constexpr s_ClearColor;
+#else
+struct
+{
+	float r = 1.0f;
+	float g = 0.5f;
+	float b = 0.0f;
+	float a = 1.0f;
+} static constexpr s_ClearColor;
+#endif
 
 App App::s_Instance;
 
@@ -41,25 +60,32 @@ App::App() : m_Window(Window::Create(640, 480, "Carrins"))
 		PerspectiveCamera::Orientation{ -nic::PI / 4, nic::PI / 4 },
 		s_Fov,
 		float(m_Window->GetWidth()) / float(m_Window->GetHeight()));
-
-	m_Running = true;
 }
 
-int App::Run()
+void App::Init()
 {
 	NIC_PROFILE_FUNCTION();
 
-	auto& window = *Get().m_Window;
-	auto& running = Get().m_Running;
+	RendererAPI::EnableDepthTesting();
+	RendererAPI::EnableFaceCulling(RendererAPI::WindingOrder::CounterClockwise);
+	RendererAPI::SetClearColor(s_ClearColor.r, s_ClearColor.g, s_ClearColor.b, s_ClearColor.a);
 
-	Renderer::Init();
+	Get().m_Renderer = std::make_unique<Renderer>("Cubo.obj", "BasicShader.glsl");
+
+	auto& window = *Get().m_Window;
+
 	ImGuiLayer::Init(static_cast<GLFWwindow*>(window.GetNativeWindow()), glsl_version);
+}
+int App::Run()
+{
+	auto& running = Get().m_Running = true;
 
 	std::thread cameraCtrlThread([&running]() {
 		float dt = 0.0f;
 		std::chrono::time_point<std::chrono::high_resolution_clock> tp = std::chrono::high_resolution_clock::now();
 		while (running)
 		{
+			NIC_PROFILE_SCOPE("Camera controller loop");
 			dt = (std::chrono::high_resolution_clock::now() - tp).count() / 1000000000.0f;
 			tp = std::chrono::high_resolution_clock::now();
 			ControllCamera(dt);
@@ -71,14 +97,13 @@ int App::Run()
 	std::chrono::time_point<std::chrono::high_resolution_clock> tp = std::chrono::high_resolution_clock::now();
 	while (running)
 	{
-		NIC_PROFILE_SCOPE("Run Loop");
+		NIC_PROFILE_SCOPE("Run loop");
 		dt = (std::chrono::high_resolution_clock::now() - tp).count() / 1000000000.0f;
 		tp = std::chrono::high_resolution_clock::now();
-		DoFrame(dt, window);
+		DoFrame(dt);
 	}
 	cameraCtrlThread.join();
 
-	Renderer::Shutdown();
 	ImGuiLayer::Shutdown();
 
 	return 0;
@@ -91,11 +116,12 @@ void App::ShutDown()
 	Get().m_Running = false;
 }
 
-void App::DoFrame(float dt, Window& window)
+void App::DoFrame(float dt)
 {
 	NIC_PROFILE_FUNCTION();
 
 	auto& camera = *Get().m_Camera;
+	auto& renderer = *Get().m_Renderer;
 
 	// Input stuff
 
@@ -104,16 +130,17 @@ void App::DoFrame(float dt, Window& window)
 
 	// Rendering stuff
 
-	Renderer::BeginScene(camera);
+	renderer.BeginScene(camera);
 
 	for (int i = -3; i < 3; i++)
 		for (int j = -3; j < 3; j++)
 			for (int k = -3; k < 3; k++)
-				Renderer::DrawCube(glm::translate(glm::mat4(1.0f), { 4.0f * i, 4.0f * j, 4.0f * k }) * glm::inverse(glm::eulerAngleYXZ(float(i * nic::PI / 8), float(j * nic::PI / 8), float(k * nic::PI / 8))));
+				renderer.DrawObject(glm::translate(glm::mat4(1.0f), { 4.0f * i, 4.0f * j, 4.0f * k }) * glm::inverse(glm::eulerAngleYXZ(float(i * nic::PI / 8), float(j * nic::PI / 8), float(k * nic::PI / 8))));
 
-	Renderer::EndScene();
+	renderer.EndScene();
 
 	// ImGui stuff
+	auto& window = *Get().m_Window;
 
 	ImGuiLayer::BeginFrame();
 	bool vSync = window.IsVSync();
@@ -186,10 +213,10 @@ void App::OnEvent(Event& e)
 		NIC_PROFILE_SCOPE("App ResizeEvent dispatch");
 		if (e.Height && e.Width)
 		{
-			Renderer::SetViewport(e.Width, e.Height);
+			RendererAPI::SetViewport(e.Width, e.Height);
 			Get().m_Camera->SetAspectRatio(float(e.Width) / float(e.Height));
 #ifdef PLATFORM_WINDOWS
-			DoFrame(Get().m_Dt, *Get().m_Window);
+			DoFrame(Get().m_Dt);
 #endif
 			return true;
 		}

@@ -1,5 +1,8 @@
 #pragma once
 #include "Bindables/Cameras.h"
+#include "Bindables/Shader.h"
+#include "Bindables/VertexArray.h"
+#include "Bindables/IndexBuffer.h"
 
 class Renderer
 {
@@ -16,21 +19,18 @@ class Renderer
 	};
 
 public:
-	static void Init();
-	static void Shutdown();
+	Renderer(const std::string& objectName, const std::string& shaderName);
 
-	static void BeginScene(const Camera& camera);
-	static void EndScene();
-
-	static std::pair<std::vector<Vertex>, std::vector<unsigned>> ReadObj(const std::string& filepath);
-	static std::pair<std::vector<Vertex>, std::vector<unsigned>> ReadPly(const std::string& filepath);
-
-	static void DrawCube(const glm::mat4& transform);
-
-	static void SetViewport(int width, int height);
+	void BeginScene(const Camera& camera);
+	void DrawObject(const glm::mat4& transform);
+	void EndScene();
 
 private:
-	static std::unique_ptr<class Shader> s_Shader;
-	static std::unique_ptr<class VertexArray> s_Va;
-	static std::unique_ptr<class IndexBuffer> s_Ib;
+	std::pair<std::vector<Vertex>, std::vector<unsigned>> ParseObj(const std::string& filepath);
+	std::pair<std::vector<Vertex>, std::vector<unsigned>> ParsePly(const std::string& filepath);
+
+private:
+	std::unique_ptr<Shader> m_Shader = nullptr;
+	std::unique_ptr<VertexArray> m_Va = nullptr;
+	std::unique_ptr<IndexBuffer> m_Ib = nullptr;
 };

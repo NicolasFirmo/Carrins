@@ -56,7 +56,6 @@ void ImGuiLayer::Shutdown()
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
 }
-
 void ImGuiLayer::Toggle(GLFWwindow* window, const char* glsl_version)
 {
 	if (!s_Enabled)
