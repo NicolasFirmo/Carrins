@@ -37,16 +37,16 @@ void Renderer::SetViewport(int width, int height)
 {
 	NIC_PROFILE_FUNCTION();
 
-	s_API->SetViewport(width, height);
+	RendererAPI::SetViewport(width, height);
 }
 
 void Renderer::Init()
 {
 	NIC_PROFILE_FUNCTION();
 
-	s_API->EnableDepthTesting();
-	s_API->EnableFaceCulling(RendererAPI::WindingOrder::CounterClockwise);
-	s_API->SetClearColor(s_ClearColor.r, s_ClearColor.g, s_ClearColor.b, s_ClearColor.a);
+	RendererAPI::EnableDepthTesting();
+	RendererAPI::EnableFaceCulling(RendererAPI::WindingOrder::CounterClockwise);
+	RendererAPI::SetClearColor(s_ClearColor.r, s_ClearColor.g, s_ClearColor.b, s_ClearColor.a);
 
 	auto [vertices, indices] = ReadObj("Assets/Objects/Cubo.obj");
 
@@ -254,7 +254,7 @@ void Renderer::BeginScene(const Camera& camera)
 {
 	NIC_PROFILE_FUNCTION();
 
-	s_API->Clear();
+	RendererAPI::Clear();
 	s_Shader->Bind();
 	s_Va->Bind();
 	s_Ib->Bind();
@@ -268,7 +268,7 @@ void Renderer::DrawCube(const glm::mat4& transform)
 
 	s_Shader->SetUniformMat4("u_ModelTransform", transform);
 
-	s_API->Draw(*s_Ib);
+	RendererAPI::Draw(s_Ib->GetCount());
 }
 
 void Renderer::EndScene()
