@@ -28,8 +28,7 @@ Renderer::Renderer(const std::string& objectName, const std::string& shaderName)
 void Renderer::BeginScene(const Camera& camera)
 {
 	NIC_PROFILE_FUNCTION();
-
-	RendererAPI::Clear();
+	
 	m_Shader->Bind();
 	m_Va->Bind();
 	m_Ib->Bind();
@@ -88,7 +87,7 @@ std::pair<std::vector<Renderer::Vertex>, std::vector<unsigned>> Renderer::ParseO
 			std::vector<std::string> results((std::istream_iterator<std::string>(iss)),
 				std::istream_iterator<std::string>());
 
-			colors.push_back({ unsigned char(std::stof(results[1]) * 255),unsigned char(std::stof(results[2]) * 255) ,unsigned char(std::stof(results[3]) * 255),255 });
+			colors.push_back({ (unsigned char)(std::stof(results[1]) * 255),(unsigned char)(std::stof(results[2]) * 255) ,(unsigned char)(std::stof(results[3]) * 255),255 });
 		}
 
 	// obj

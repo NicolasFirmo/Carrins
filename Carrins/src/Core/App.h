@@ -13,7 +13,6 @@ public:
 
 	static void DoFrame(float dt);
 
-	static void ControllCamera(float dt);
 	static void UpdateImGuiLayerState(bool shouldToggle);
 
 	void OnEvent(class Event &e);
@@ -28,8 +27,6 @@ private:
 	static App s_Instance;
 
 	std::unique_ptr<Window> m_Window;
-	std::unique_ptr<class PerspectiveCamera> m_Camera;
-	std::unique_ptr<class Renderer> m_Renderer;
 
 	bool m_Running = false;
 	bool m_ImGuiLayerShouldToggle = false;

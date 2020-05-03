@@ -1,20 +1,16 @@
 #include "App.h"
 #include "Core.h"
 
-#include "Inupt.h"
-
 #include "Events/WindowEvent.h"
 #include "Events/KeyboardEvent.h"
 #include "Events/MouseEvent.h"
 
-#include "Renderer/Renderer.h"
 #include "Renderer/RendererAPI.h"
+
 #include "ImGui/ImGuiLayer.h"
+#include "Game/GameLayer.h"
 
 #include <Instrumentation/Profile.h>
-
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/euler_angles.hpp>
 
 #ifndef NDEBUG
 struct
@@ -36,8 +32,6 @@ struct
 
 App App::s_Instance;
 
-static float s_Fov = glm::radians(80.0f);
-
 App& App::Get()
 {
 	return s_Instance;
@@ -54,56 +48,37 @@ App::App() : m_Window(Window::Create(640, 480, "Carrins"))
 	NIC_PROFILE_FUNCTION();
 
 	m_Window->SetEventCallback([](Event& e) { Get().OnEvent(e); });
-
-	m_Camera = std::make_unique<PerspectiveCamera>(
-		PerspectiveCamera::Position{ 2.0f, 2.0f, 2.0f },
-		PerspectiveCamera::Orientation{ -nic::PI / 4, nic::PI / 4 },
-		s_Fov,
-		float(m_Window->GetWidth()) / float(m_Window->GetHeight()));
 }
 
 void App::Init()
 {
 	NIC_PROFILE_FUNCTION();
+	auto& window = *Get().m_Window;
 
 	RendererAPI::EnableDepthTesting();
 	RendererAPI::EnableFaceCulling(RendererAPI::WindingOrder::CounterClockwise);
 	RendererAPI::SetClearColor(s_ClearColor.r, s_ClearColor.g, s_ClearColor.b, s_ClearColor.a);
 
-	Get().m_Renderer = std::make_unique<Renderer>("Cubo.obj", "BasicShader.glsl");
-
-	auto& window = *Get().m_Window;
-
 	ImGuiLayer::Init(static_cast<GLFWwindow*>(window.GetNativeWindow()), glsl_version);
+	GameLayer::Init(float(window.GetWidth()) / float(window.GetHeight()));
 }
 int App::Run()
 {
 	auto& running = Get().m_Running = true;
-
-	std::thread cameraCtrlThread([&running]() {
-		float dt = 0.0f;
-		std::chrono::time_point<std::chrono::high_resolution_clock> tp = std::chrono::high_resolution_clock::now();
-		while (running)
-		{
-			NIC_PROFILE_SCOPE("Camera controller loop");
-			dt = (std::chrono::high_resolution_clock::now() - tp).count() / 1000000000.0f;
-			tp = std::chrono::high_resolution_clock::now();
-			ControllCamera(dt);
-			std::this_thread::sleep_for(std::chrono::milliseconds(1));
-		}
-		});
-
 	auto& dt = Get().m_Dt;
 	std::chrono::time_point<std::chrono::high_resolution_clock> tp = std::chrono::high_resolution_clock::now();
+
 	while (running)
 	{
 		NIC_PROFILE_SCOPE("Run loop");
 		dt = (std::chrono::high_resolution_clock::now() - tp).count() / 1000000000.0f;
 		tp = std::chrono::high_resolution_clock::now();
+
+		GameLayer::OnUpdate(dt);
 		DoFrame(dt);
 	}
-	cameraCtrlThread.join();
 
+	GameLayer::Shutdown();
 	ImGuiLayer::Shutdown();
 
 	return 0;
@@ -120,69 +95,18 @@ void App::DoFrame(float dt)
 {
 	NIC_PROFILE_FUNCTION();
 
-	auto& camera = *Get().m_Camera;
-	auto& renderer = *Get().m_Renderer;
-
-	// Input stuff
-
-	camera.SetFOV(s_Fov);
-	UpdateImGuiLayerState(Get().m_ImGuiLayerShouldToggle);
-
-	// Rendering stuff
-
-	renderer.BeginScene(camera);
-
-	for (int i = -3; i < 3; i++)
-		for (int j = -3; j < 3; j++)
-			for (int k = -3; k < 3; k++)
-				renderer.DrawObject(glm::translate(glm::mat4(1.0f), { 4.0f * i, 4.0f * j, 4.0f * k }) * glm::inverse(glm::eulerAngleYXZ(float(i * nic::PI / 8), float(j * nic::PI / 8), float(k * nic::PI / 8))));
-
-	renderer.EndScene();
-
-	// ImGui stuff
 	auto& window = *Get().m_Window;
-
-	ImGuiLayer::BeginFrame();
 	bool vSync = window.IsVSync();
 	bool fullScreen = window.IsFullScreen();
-	ImGuiLayer::Update(dt, s_Fov, vSync, fullScreen);
 
-	ImGuiLayer::EndFrame();
+	UpdateImGuiLayerState(Get().m_ImGuiLayerShouldToggle);
 
-	// Pool events & Swap frame buffer
+	RendererAPI::Clear();
+	GameLayer::OnRender();
+
+	ImGuiLayer::OnFrame(dt, vSync, fullScreen);
 
 	window.Update(vSync, fullScreen);
-}
-
-void App::ControllCamera(float dt)
-{
-	auto& camera = *Get().m_Camera;
-
-	if (Input::IsKeyPressed(GLFW_KEY_W))
-		camera.TransformPosition(0.0f, 0.0f, -dt);
-	else if (Input::IsKeyPressed(GLFW_KEY_S))
-		camera.TransformPosition(0.0f, 0.0f, dt);
-	if (Input::IsKeyPressed(GLFW_KEY_D))
-		camera.TransformPosition(dt, 0.0f, 0.0f);
-	else if (Input::IsKeyPressed(GLFW_KEY_A))
-		camera.TransformPosition(-dt, 0.0f, 0.0f);
-	if (Input::IsKeyPressed(GLFW_KEY_LEFT_SHIFT))
-		camera.TransformPosition(0.0f, dt, 0.0f);
-	else if (Input::IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
-		camera.TransformPosition(0.0f, -dt, 0.0f);
-
-	if (Input::IsKeyPressed(GLFW_KEY_Q))
-		camera.TransformOrientation(0.0f, 0.0f, dt);
-	else if (Input::IsKeyPressed(GLFW_KEY_E))
-		camera.TransformOrientation(0.0f, 0.0f, -dt);
-	if (Input::IsKeyPressed(GLFW_KEY_UP))
-		camera.TransformOrientation(dt, 0.0f, 0.0f);
-	else if (Input::IsKeyPressed(GLFW_KEY_DOWN))
-		camera.TransformOrientation(-dt, 0.0f, 0.0f);
-	if (Input::IsKeyPressed(GLFW_KEY_RIGHT))
-		camera.TransformOrientation(0.0f, -dt, 0.0f);
-	else if (Input::IsKeyPressed(GLFW_KEY_LEFT))
-		camera.TransformOrientation(0.0f, dt, 0.0f);
 }
 
 void App::UpdateImGuiLayerState(bool shouldToggle)
@@ -214,15 +138,13 @@ void App::OnEvent(Event& e)
 		if (e.Height && e.Width)
 		{
 			RendererAPI::SetViewport(e.Width, e.Height);
-			Get().m_Camera->SetAspectRatio(float(e.Width) / float(e.Height));
+			GameLayer::OnEvent(e);
 #ifdef PLATFORM_WINDOWS
 			DoFrame(Get().m_Dt);
 #endif
-			return true;
 		}
-		return false;
+		return true;
 		});
-
 	e.Dispatch<KeyEvent>([](KeyEvent& e) {
 		NIC_PROFILE_SCOPE("App KeyEvent dispatch");
 		if (e.Type == KeyEvent::T::Pressed)
@@ -236,7 +158,6 @@ void App::OnEvent(Event& e)
 				return true;
 			}
 			case GLFW_KEY_F11:
-			case GLFW_KEY_F:
 			{
 				Get().GetWindow().ToggleFullScreen();
 				return true;
@@ -254,8 +175,8 @@ void App::OnEvent(Event& e)
 			return false;
 		});
 
-	if (e.IsHandled())
-		return;
+	if (!e.IsHandled())
+		GameLayer::OnEvent(e);
 }
 
 Window& App::GetWindow() const

@@ -8,62 +8,6 @@
 bool ImGuiLayer::s_Enabled = false;
 nic::Accumulator<float,30> ImGuiLayer::s_Dts(0.016f);
 
-void ImGuiLayer::Init(GLFWwindow* window, const char* glsl_version)
-{
-	NIC_PROFILE_FUNCTION();
-
-	if (s_Enabled)
-		return;
-
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO();
-	(void)io;
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
-	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;		// Enable Docking
-	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable Multi-Viewport / Platform Windows
-	//io.ConfigViewportsNoAutoMerge = true;
-	//io.ConfigViewportsNoTaskBarIcon = true;
-
-	// Setup Dear ImGui style
-	ImGui::StyleColorsDark();
-	//ImGui::StyleColorsClassic();
-
-	// When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
-	ImGuiStyle& style = ImGui::GetStyle();
-	if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-	{
-		style.WindowRounding = 0.0f;
-		style.Colors[ImGuiCol_WindowBg].w = 1.0f;
-	}
-
-	ImGui_ImplGlfw_InitForOpenGL(window, true);
-	ImGui_ImplOpenGL3_Init(glsl_version);
-
-	s_Enabled = true;
-}
-void ImGuiLayer::Shutdown()
-{
-	NIC_PROFILE_FUNCTION();
-
-	if (!s_Enabled)
-		return;
-
-	s_Enabled = false;
-
-	ImGui_ImplOpenGL3_Shutdown();
-	ImGui_ImplGlfw_Shutdown();
-	ImGui::DestroyContext();
-}
-void ImGuiLayer::Toggle(GLFWwindow* window, const char* glsl_version)
-{
-	if (!s_Enabled)
-		Init(window, glsl_version);
-	else
-		Shutdown();
-}
-
 void ImGuiLayer::BeginFrame()
 {
 	NIC_PROFILE_FUNCTION();
@@ -101,20 +45,16 @@ void ImGuiLayer::EndFrame()
 	}
 }
 
-void ImGuiLayer::Update(float dt, float& fov, bool& vSync, bool& fullScreen)
+void ImGuiLayer::OnFrame(float dt, bool& vSync, bool& fullScreen)
 {
 	NIC_PROFILE_FUNCTION();
-	
-	s_Dts.Push(dt);
 
 	if (!s_Enabled)
 		return;
 
-	if (ImGui::Begin("Camera"))
-	{
-		ImGui::SliderAngle("Campo de visão", &fov, 0.0f, 180.0f, "%.0f°");
-	}
-	ImGui::End();
+	s_Dts.Push(dt);
+
+	BeginFrame();
 
 	if (ImGui::Begin("App"))
 	{
@@ -126,4 +66,62 @@ void ImGuiLayer::Update(float dt, float& fov, bool& vSync, bool& fullScreen)
 		ImGui::Checkbox("Tela cheia", &fullScreen);
 	}
 	ImGui::End();
+
+	EndFrame();
+}
+
+void ImGuiLayer::Init(GLFWwindow* window, const char* glsl_version)
+{
+	NIC_PROFILE_FUNCTION();
+
+	if (s_Enabled)
+		return;
+
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO();
+	(void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;		// Enable Docking
+	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable Multi-Viewport / Platform Windows
+	//io.ConfigViewportsNoAutoMerge = true;
+	//io.ConfigViewportsNoTaskBarIcon = true;
+
+	// Setup Dear ImGui style
+	ImGui::StyleColorsDark();
+	//ImGui::StyleColorsClassic();
+
+	// When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
+	ImGuiStyle& style = ImGui::GetStyle();
+	if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+	{
+		style.WindowRounding = 0.0f;
+		style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+	}
+
+	ImGui_ImplGlfw_InitForOpenGL(window, false);
+	ImGui_ImplOpenGL3_Init(glsl_version);
+
+	s_Enabled = true;
+}
+void ImGuiLayer::Shutdown()
+{
+	NIC_PROFILE_FUNCTION();
+
+	if (!s_Enabled)
+		return;
+
+	s_Enabled = false;
+
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
+}
+void ImGuiLayer::Toggle(GLFWwindow* window, const char* glsl_version)
+{
+	if (!s_Enabled)
+		Init(window, glsl_version);
+	else
+		Shutdown();
 }
