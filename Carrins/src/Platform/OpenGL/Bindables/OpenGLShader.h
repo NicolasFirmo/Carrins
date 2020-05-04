@@ -15,6 +15,8 @@ public:
 
 	virtual void Bind() const override;
 
+	virtual void SetUniformInt(const std::string &name, const int value) override;
+
 	virtual void SetUniformFloat(const std::string &name, const float value) override;
 	virtual void SetUniformFloat2(const std::string &name, const glm::vec2 &value) override;
 	virtual void SetUniformFloat3(const std::string &name, const glm::vec3 &value) override;

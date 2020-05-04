@@ -47,6 +47,12 @@ void OpenGLShader::Bind() const
 
 // Uniforms
 
+void OpenGLShader::SetUniformInt(const std::string &name, const int value)
+{
+	GLint location = GetUniformCachedLocation(name);
+	GLCall(glUniform1i(location, value));
+}
+
 void OpenGLShader::SetUniformFloat(const std::string &name, const float value)
 {
 	GLint location = GetUniformCachedLocation(name);
@@ -154,6 +160,8 @@ int OpenGLShader::GetUniformCachedLocation(const std::string &name)
 		NIC_PROFILE_SCOPE("Get uniform location from OpenGL");
 
 		GLCall(int location = m_UniformLocations[name] = glGetUniformLocation(m_Id, name.c_str()));
+		if (location == -1)
+			DebugLog("WARNING: uniform " << name << " does not exist!");
 		return location;
 	}
 }
