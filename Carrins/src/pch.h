@@ -16,6 +16,7 @@
 #include <memory>
 #include <iterator>
 #include <string>
+#include <cstring> // memcpy
 #include <array>
 #include <vector>
 #include <queue>

@@ -17,6 +17,7 @@ class Track
 
 public:
 	Track(const std::string &name);
+	~Track();
 
 	void Draw(const Camera& camera);
 
@@ -26,4 +27,6 @@ private:
 	std::unique_ptr<Texture> m_NormalMap = nullptr;
 	std::unique_ptr<VertexArray> m_Va = nullptr;
 	std::unique_ptr<IndexBuffer> m_Ib = nullptr;
+
+	unsigned char * m_NormalMapImgBuffer = nullptr;
 };
