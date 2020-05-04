@@ -27,5 +27,7 @@ private:
 	std::unique_ptr<class PerspectiveCamera> m_Camera;
 	std::unique_ptr<class Renderer> m_Renderer;
 
+	std::unique_ptr<class Track> m_Track;
+
 	float m_T = 0.0f;
 };
