@@ -18,7 +18,7 @@ Track::Track(const std::string &name)
 	m_NormalMapImgBuffer = new unsigned char[width * 4 * height];
 	InitBumpToNormalMap(width, height);
 
-	m_NormalMap = Texture::Create(width, height, 4, m_NormalMapImgBuffer, Texture::Filter::Bilinear);
+	m_NormalMap = Texture::Create({width, height, 4, 8, m_NormalMapImgBuffer}, Texture::Filter::Bilinear);
 
 	unsigned pixelCount = width * height;
 
