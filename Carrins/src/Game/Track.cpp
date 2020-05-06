@@ -62,7 +62,7 @@ void Track::Draw(const Camera &camera)
 
 	{
 		NIC_PROFILE_SCOPE("Cuda Kernel");
-		KernelBumpToNormalMap(m_HeightMap->GetImgBuffer(), m_NormalMapImgBuffer);
+		KernelBumpToNormalMap((const unsigned short *)m_HeightMap->GetImgBuffer(), m_NormalMapImgBuffer);
 	}
 
 	m_Shader->Bind();
