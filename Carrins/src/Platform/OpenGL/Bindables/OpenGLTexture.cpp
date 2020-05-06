@@ -30,7 +30,7 @@ OpenGLTexture::OpenGLTexture(const Image& image, Filter filter)
 		GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
 		break;
 	default:
-		NIC_ASSERT(false, "Bad filter");
+		NIC_ASSERT(false, "Bad filter")
 	}
 
 	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP));
@@ -51,7 +51,7 @@ OpenGLTexture::OpenGLTexture(const Image& image, Filter filter)
 		GLCall(glTexImage2D(GL_TEXTURE_2D, 0, (image.GetBitDepth() == 8 ? GL_RGBA8 : GL_RGBA16), m_Width, m_Height, 0, GL_RGBA, (image.GetBitDepth() == 8 ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT), m_ImgBuffer));
 		break;
 	default:
-		NIC_ASSERT(false, "Bad number of channels");
+		NIC_ASSERT(false, "Bad number of channels")
 	}
 }
 OpenGLTexture::~OpenGLTexture()
@@ -66,7 +66,7 @@ OpenGLTexture::~OpenGLTexture()
 
 void OpenGLTexture::Bind(unsigned slot) const
 {
-	NIC_ASSERT(slot < 32, "The max texture slot value in this platform is 31");
+	NIC_ASSERT(slot < 32, "The max texture slot value in this platform is 31")
 
 	GLCall(glActiveTexture(GL_TEXTURE0 + slot));
 	GLCall(glBindTexture(GL_TEXTURE_2D, m_Id));
@@ -93,6 +93,6 @@ void OpenGLTexture::SetImage(const void *imgBuffer, unsigned slot) const
 		GLCall(glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_Width, m_Height, GL_RGBA, GL_UNSIGNED_BYTE, imgBuffer));
 		break;
 	default:
-		NIC_ASSERT(false, "Bad number of channels");
+		NIC_ASSERT(false, "Bad number of channels")
 	}
 }

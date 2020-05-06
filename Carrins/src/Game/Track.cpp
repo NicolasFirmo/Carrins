@@ -39,7 +39,7 @@ Track::Track(const std::string &name)
 	unsigned quadCount = (width - 1) * (height - 1);
 
 	std::vector<unsigned> indices(quadCount * 6);
-	for (size_t i = 0, j = 0; i < indices.size(); i += 6, j++)
+	for (unsigned i = 0, j = 0; i < indices.size(); i += 6, j++)
 	{
 		if (!((j + 1) % width))
 			j++;

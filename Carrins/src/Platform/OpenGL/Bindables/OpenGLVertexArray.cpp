@@ -79,7 +79,7 @@ unsigned OpenGLVertexArray::GetGLType(VertexLayout::Attribute::T type) const noe
 		return GL_UNSIGNED_BYTE;
 
 	default:
-		NIC_ASSERT(false, "Bad vertex attribute type");
+		NIC_ASSERT(false, "Bad vertex attribute type")
 		return 0;
 	}
 }
@@ -116,7 +116,7 @@ unsigned char OpenGLVertexArray::GetGLNormalized(VertexLayout::Attribute::T type
 		return GL_TRUE;
 
 	default:
-		NIC_ASSERT(false, "Bad vertex attribute type");
+		NIC_ASSERT(false, "Bad vertex attribute type")
 		return 0;
 	}
 }

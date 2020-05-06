@@ -57,9 +57,9 @@ std::pair<std::vector<Renderer::Vertex>, std::vector<unsigned>> Renderer::ParseO
 	NIC_PROFILE_FUNCTION();
 
 	std::ifstream objFile(filepath);
-	NIC_ASSERT(objFile.is_open(), "objFile \"" << filepath << "\" could not be opened");
+	NIC_ASSERT(objFile.is_open(), "objFile \"" << filepath << "\" could not be opened")
 	std::ifstream mtlFile(filepath.substr(0, filepath.size() - 3) + "mtl");
-	NIC_ASSERT(objFile.is_open(), "mtlFile \"" << (filepath.substr(0, filepath.size() - 3) + "mtl") << "\" could not be opened");
+	NIC_ASSERT(objFile.is_open(), "mtlFile \"" << (filepath.substr(0, filepath.size() - 3) + "mtl") << "\" could not be opened")
 
 	std::vector<Vertex::Vec3> positions;
 	std::vector<Vertex::Vec3> normals;
@@ -179,7 +179,7 @@ std::pair<std::vector<Renderer::Vertex>, std::vector<unsigned>> Renderer::ParseP
 	NIC_PROFILE_FUNCTION();
 
 	std::ifstream objFile(filepath);
-	NIC_ASSERT(objFile.is_open(), "objFile \"" << filepath << "\" could not be opened");
+	NIC_ASSERT(objFile.is_open(), "objFile \"" << filepath << "\" could not be opened")
 
 	std::vector<Vertex> vertices;
 	std::vector<unsigned> indices;

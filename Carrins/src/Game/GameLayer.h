@@ -5,7 +5,7 @@ class GameLayer
 public:
 	static GameLayer& Get();
 
-	static void Init(float aspectRation);
+	static void Init(float aspectRatio);
 	static void Shutdown();
 
 	static void OnUpdate(float dt);

@@ -92,7 +92,7 @@ OpenGLShader::Sources OpenGLShader::ParseShaders(const std::string &filepath) co
 	NIC_PROFILE_FUNCTION();
 
 	std::ifstream shaderFile(filepath);
-	NIC_ASSERT(shaderFile.is_open(), "shaderFile \"" << filepath << "\" could not be opened");
+	NIC_ASSERT(shaderFile.is_open(), "shaderFile \"" << filepath << "\" could not be opened")
 
 	enum
 	{
@@ -161,7 +161,9 @@ int OpenGLShader::GetUniformCachedLocation(const std::string &name)
 
 		GLCall(int location = m_UniformLocations[name] = glGetUniformLocation(m_Id, name.c_str()));
 		if (location == -1)
+		{
 			DebugLog("WARNING: uniform " << name << " does not exist or not being used!");
+		}
 		return location;
 	}
 }

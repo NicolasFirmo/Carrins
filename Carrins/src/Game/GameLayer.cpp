@@ -28,7 +28,7 @@ GameLayer &GameLayer::Get()
 	return s_Instance;
 }
 
-void GameLayer::Init(float aspectRation)
+void GameLayer::Init(float aspectRatio)
 {
 	NIC_PROFILE_FUNCTION();
 
@@ -36,9 +36,9 @@ void GameLayer::Init(float aspectRation)
 
 	Get().m_Camera = std::make_unique<PerspectiveCamera>(
 			PerspectiveCamera::Position{2.0f, 2.0f, 2.0f},
-			PerspectiveCamera::Orientation{-nic::PI / 4, nic::PI / 4},
-			nic::PI / 3,
-			aspectRation);
+			PerspectiveCamera::Orientation{-float(nic::PI) / 4, float(nic::PI) / 4},
+			float(nic::PI) / 3,
+			aspectRatio);
 
 	Get().m_Track = std::make_unique<Track>("Test");
 

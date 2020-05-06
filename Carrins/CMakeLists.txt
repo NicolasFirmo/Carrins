@@ -1,6 +1,8 @@
 find_package(OpenGL REQUIRED)
 find_package(Threads REQUIRED)
+if(UNIX)
 find_package(PNG REQUIRED)
+endif(UNIX)
 
 add_subdirectory(Vendor/glad)
  
@@ -32,7 +34,14 @@ target_include_directories(${PROJECT_NAME} PRIVATE src)
 
 target_link_libraries(${PROJECT_NAME} OpenGL::GL)
 target_link_libraries(${PROJECT_NAME} Threads::Threads)
+if(UNIX)
 target_link_libraries(${PROJECT_NAME} PNG::PNG)
+endif(UNIX)
+if(WIN32)
+target_include_directories(${PROJECT_NAME} PRIVATE Vendor/libpng/include)
+target_link_directories(${PROJECT_NAME} PRIVATE Vendor/libpng/lib)
+target_link_libraries(${PROJECT_NAME} "zlibstat$<$<CONFIG:Debug>:d>.lib" "libpng$<$<CONFIG:Debug>:d>.lib")
+endif(WIN32)
 
 target_link_libraries(${PROJECT_NAME} glad)
 target_link_libraries(${PROJECT_NAME} glfw)

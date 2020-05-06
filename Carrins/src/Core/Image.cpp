@@ -8,18 +8,18 @@
 Image::Image(const std::string &filepath)
 {
 	NIC_PROFILE_FUNCTION();
-
+	
 	FILE *fp = fopen(filepath.c_str(), "rb");
 	unsigned char header[8];
 
-	NIC_ASSERT(fp, "File %s could not be opened for reading" << filepath);
-	NIC_ASSERT(fread(header, 1, std::size(header), fp) == std::size(header), "fread falied");
-	NIC_ASSERT(png_check_sig(header, std::size(header)), "File %s is not recognized as a PNG file");
+	NIC_ASSERT(fp, "File %s could not be opened for reading" << filepath)
+	NIC_ASSERT(fread(header, 1, std::size(header), fp) == std::size(header), "fread falied")
+	NIC_ASSERT(png_check_sig(header, std::size(header)), "File %s is not recognized as a PNG file")
 
 	png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-	NIC_ASSERT(png, "png_create_read_struct failed");
+	NIC_ASSERT(png, "png_create_read_struct failed")
 	png_infop info = png_create_info_struct(png);
-	NIC_ASSERT(png, "png_create_info_struct failed");
+	NIC_ASSERT(png, "png_create_info_struct failed")
 
 	png_init_io(png, fp);
 	png_set_sig_bytes(png, 8);
@@ -34,7 +34,7 @@ Image::Image(const std::string &filepath)
 	NIC_ASSERT(
 	colorType == PNG_COLOR_TYPE_GRAY || 
 	colorType == PNG_COLOR_TYPE_GRAY_ALPHA || 
-	colorType == PNG_COLOR_TYPE_RGBA,"Color type not suported");
+	colorType == PNG_COLOR_TYPE_RGBA,"Color type not suported")
 
 	m_Channels = (colorType == PNG_COLOR_TYPE_RGBA ? 4 : 1);
 
@@ -69,8 +69,8 @@ Image::Image(const unsigned width, const unsigned height, const unsigned char ch
 {
 	NIC_PROFILE_FUNCTION();
 
-	NIC_ASSERT(!(bitDepth % 8),"bitDepth must be 8 or above multiples");
-	NIC_ASSERT(channels == 1 || channels == 4,"Only images with 1 or 4 channels suported");
+	NIC_ASSERT(!(bitDepth % 8),"bitDepth must be 8 or above multiples")
+	NIC_ASSERT(channels == 1 || channels == 4,"Only images with 1 or 4 channels suported")
 	m_ImgBuffer = new unsigned char[width * bitDepth / 8 * channels * height];
 	std::memcpy(m_ImgBuffer, imgBuffer, width * bitDepth / 8 * channels * height);
 }

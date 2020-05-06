@@ -56,7 +56,7 @@ public:
 				return 4;
 
 			default:
-				NIC_ASSERT(false, "Bad vertex attribute type");
+				NIC_ASSERT(false, "Bad vertex attribute type")
 				return 0;
 			}
 		};
@@ -92,7 +92,7 @@ public:
 				return 4 * sizeof(unsigned char);
 
 			default:
-				NIC_ASSERT(false, "Bad vertex attribute type");
+				NIC_ASSERT(false, "Bad vertex attribute type")
 				return 0;
 			}
 		};

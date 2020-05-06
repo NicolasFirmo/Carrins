@@ -22,7 +22,7 @@ glfwWindow::glfwWindow(int width, int height, const char* title) : m_WindowData(
 {
 	NIC_PROFILE_FUNCTION();
 
-	NIC_ASSERT(glfwInit(), "glfw not Initialized");
+	NIC_ASSERT(glfwInit(), "glfw not Initialized")
 
 	glfwSetErrorCallback([](int code, const char* msg) {
 		DebugLog("GLFW ERROR " << code << ": " << msg << '\n');
@@ -33,7 +33,7 @@ glfwWindow::glfwWindow(int width, int height, const char* title) : m_WindowData(
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	NIC_ASSERT(m_Window = glfwCreateWindow(width, height, title, NULL, NULL), "window not created");
+	NIC_ASSERT(m_Window = glfwCreateWindow(width, height, title, NULL, NULL), "window not created")
 	m_FullScreen = false;
 
 	glfwMakeContextCurrent(m_Window);
