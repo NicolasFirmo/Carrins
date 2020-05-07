@@ -3,18 +3,15 @@
 
 #include "Instrumentation/Profile.h"
 
-std::unique_ptr<Texture> Texture::Create(const Image& image, Filter filter)
+std::unique_ptr<Texture> Texture::Create(std::unique_ptr<Image> image, Filter filter)
 {
-	return std::make_unique<OpenGLTexture>(image, filter);
+	return std::make_unique<OpenGLTexture>(std::move(image), filter);
 }
 
-OpenGLTexture::OpenGLTexture(const Image& image, Filter filter)
-		: m_Width(image.GetWidth()), m_Height(image.GetHeight()), m_Channels(image.GetChannels())
+OpenGLTexture::OpenGLTexture(std::unique_ptr<Image> image, Filter filter)
+		: Texture(std::move(image))
 {
 	NIC_PROFILE_FUNCTION();
-
-	m_ImgBuffer = new unsigned char[image.GetWidth() * image.GetBitDepth()/8 * image.GetChannels() * image.GetHeight()];
-	std::memcpy(m_ImgBuffer, image.GetImgBuffer(), image.GetWidth() * image.GetBitDepth()/8 * image.GetChannels() * image.GetHeight());
 
 	GLCall(glCreateTextures(GL_TEXTURE_2D, 1, &m_Id));
 	GLCall(glBindTexture(GL_TEXTURE_2D, m_Id));
@@ -36,19 +33,24 @@ OpenGLTexture::OpenGLTexture(const Image& image, Filter filter)
 	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP));
 	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP));
 
-	switch (m_Channels)
+	auto width = m_Image->GetWidth();
+	auto height = m_Image->GetHeight();
+	auto bitDepth = m_Image->GetBitDepth();
+	auto imgBuffer = m_Image->GetImgBuffer();
+
+	switch (m_Image->GetChannels())
 	{
 	case 1:
-		GLCall(glTexImage2D(GL_TEXTURE_2D, 0, (image.GetBitDepth() == 8 ? GL_R8 : GL_R16), m_Width, m_Height, 0, GL_RED, (image.GetBitDepth() == 8 ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT), m_ImgBuffer));
+		GLCall(glTexImage2D(GL_TEXTURE_2D, 0, (bitDepth == 8 ? GL_R8 : GL_R16), width, height, 0, GL_RED, (bitDepth == 8 ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT), imgBuffer));
 		break;
 	case 2:
-		GLCall(glTexImage2D(GL_TEXTURE_2D, 0, (image.GetBitDepth() == 8 ? GL_RG8 : GL_RG16), m_Width, m_Height, 0, GL_RG, (image.GetBitDepth() == 8 ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT), m_ImgBuffer));
+		GLCall(glTexImage2D(GL_TEXTURE_2D, 0, (bitDepth == 8 ? GL_RG8 : GL_RG16), width, height, 0, GL_RG, (bitDepth == 8 ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT), imgBuffer));
 		break;
 	case 3:
-		GLCall(glTexImage2D(GL_TEXTURE_2D, 0, (image.GetBitDepth() == 8 ? GL_RGB8 : GL_RGB16), m_Width, m_Height, 0, GL_RGB, (image.GetBitDepth() == 8 ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT), m_ImgBuffer));
+		GLCall(glTexImage2D(GL_TEXTURE_2D, 0, (bitDepth == 8 ? GL_RGB8 : GL_RGB16), width, height, 0, GL_RGB, (bitDepth == 8 ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT), imgBuffer));
 		break;
 	case 4:
-		GLCall(glTexImage2D(GL_TEXTURE_2D, 0, (image.GetBitDepth() == 8 ? GL_RGBA8 : GL_RGBA16), m_Width, m_Height, 0, GL_RGBA, (image.GetBitDepth() == 8 ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT), m_ImgBuffer));
+		GLCall(glTexImage2D(GL_TEXTURE_2D, 0, (bitDepth == 8 ? GL_RGBA8 : GL_RGBA16), width, height, 0, GL_RGBA, (bitDepth == 8 ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT), imgBuffer));
 		break;
 	default:
 		NIC_ASSERT(false, "Bad number of channels")
@@ -57,9 +59,6 @@ OpenGLTexture::OpenGLTexture(const Image& image, Filter filter)
 OpenGLTexture::~OpenGLTexture()
 {
 	NIC_PROFILE_FUNCTION();
-
-	if (m_ImgBuffer)
-		delete[] m_ImgBuffer;
 
 	GLCall(glDeleteTextures(1, &m_Id));
 }
@@ -72,25 +71,31 @@ void OpenGLTexture::Bind(unsigned slot) const
 	GLCall(glBindTexture(GL_TEXTURE_2D, m_Id));
 }
 
-void OpenGLTexture::SetImage(const void *imgBuffer, unsigned slot) const
+void OpenGLTexture::UpdateTexture(unsigned slot) const
 {
 	NIC_PROFILE_FUNCTION();
 
 	GLCall(glActiveTexture(GL_TEXTURE0 + slot));
 	GLCall(glBindTexture(GL_TEXTURE_2D, m_Id));
-	switch (m_Channels)
+
+	auto width = m_Image->GetWidth();
+	auto height = m_Image->GetHeight();
+	auto bitDepth = m_Image->GetBitDepth();
+	auto imgBuffer = m_Image->GetImgBuffer();
+
+	switch (m_Image->GetChannels())
 	{
 	case 1:
-		GLCall(glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_Width, m_Height, GL_RED, GL_UNSIGNED_BYTE, imgBuffer));
+		GLCall(glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RED, (bitDepth == 8 ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT), imgBuffer));
 		break;
 	case 2:
-		GLCall(glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_Width, m_Height, GL_RG, GL_UNSIGNED_BYTE, imgBuffer));
+		GLCall(glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RG, (bitDepth == 8 ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT), imgBuffer));
 		break;
 	case 3:
-		GLCall(glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_Width, m_Height, GL_RGB, GL_UNSIGNED_BYTE, imgBuffer));
+		GLCall(glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGB, (bitDepth == 8 ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT), imgBuffer));
 		break;
 	case 4:
-		GLCall(glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_Width, m_Height, GL_RGBA, GL_UNSIGNED_BYTE, imgBuffer));
+		GLCall(glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, (bitDepth == 8 ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT), imgBuffer));
 		break;
 	default:
 		NIC_ASSERT(false, "Bad number of channels")

@@ -11,14 +11,15 @@ public:
 	};
 
 public:
-	static std::unique_ptr<Texture> Create(const Image& image, Filter filter = Filter::None);
+	static std::unique_ptr<Texture> Create(std::unique_ptr<Image> image, Filter filter = Filter::None);
+	Texture(std::unique_ptr<Image> image) : m_Image(std::move(image)) {}
 
 	virtual void Bind(unsigned slot = 0) const = 0;
 
-	virtual void SetImage(const void *imgBuffer, unsigned slot) const = 0;
+	virtual void UpdateTexture(unsigned slot) const = 0;
 
-	virtual unsigned GetWidth() const = 0;
-	virtual unsigned GetHeight() const = 0;
-	virtual unsigned char GetChannels() const = 0;
-	virtual const unsigned char *GetImgBuffer() const = 0;
+	Image &GetImage() const { return *m_Image; }
+
+protected:
+	std::unique_ptr<Image> m_Image;
 };

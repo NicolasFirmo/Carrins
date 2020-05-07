@@ -11,16 +11,15 @@ Track::Track(const std::string &name)
 {
 	NIC_PROFILE_FUNCTION();
 
-	m_HeightMap = Texture::Create("Assets/Tracks/" + name + "H.png");
-	unsigned width = m_HeightMap->GetWidth();
-	unsigned height = m_HeightMap->GetHeight();
+	m_HeightMap = Texture::Create(std::make_unique<Image>("Assets/Tracks/" + name + "H.png"));
+	auto width = m_HeightMap->GetImage().GetWidth();
+	auto height = m_HeightMap->GetImage().GetHeight();
 
-	m_NormalMapImgBuffer = new unsigned char[width * 4 * height];
 	InitBumpToNormalMap(width, height);
 
-	m_NormalMap = Texture::Create({width, height, 4, 8, m_NormalMapImgBuffer}, Texture::Filter::Bilinear);
+	m_NormalMap = Texture::Create(std::make_unique<Image>(width, height, 4, 8), Texture::Filter::Bilinear);
 
-	unsigned pixelCount = width * height;
+	auto pixelCount = width * height;
 
 	std::vector<Vertex> vertices(pixelCount);
 	for (size_t i = 0; i < width; i++)
@@ -36,7 +35,7 @@ Track::Track(const std::string &name)
 	const std::array<unsigned, 6> quadIndicesPatern = {
 			0, 1, width + 1, width + 1, width, 0};
 
-	unsigned quadCount = (width - 1) * (height - 1);
+	auto quadCount = (width - 1) * (height - 1);
 
 	std::vector<unsigned> indices(quadCount * 6);
 	for (unsigned i = 0, j = 0; i < indices.size(); i += 6, j++)
@@ -53,24 +52,33 @@ Track::Track(const std::string &name)
 Track::~Track()
 {
 	ShutdownBumpToNormalMap();
-	delete[] m_NormalMapImgBuffer;
 }
 
 void Track::Draw(const Camera &camera)
 {
 	NIC_PROFILE_FUNCTION();
 
+	unsigned short *img = reinterpret_cast<unsigned short *>(m_HeightMap->GetImage().GetImgBuffer());
+
+	auto width = m_HeightMap->GetImage().GetWidth();
+	auto height = m_HeightMap->GetImage().GetHeight();
+
+	for (size_t i = (width/2 - 10); i < (width/2 + 10); i++)
+		for (size_t j = (height/2 - 10); j < (height/2 + 10); j++)
+			img[i + width * j] *= 0.999f;
+
 	{
 		NIC_PROFILE_SCOPE("Cuda Kernel");
-		KernelBumpToNormalMap((const unsigned short *)m_HeightMap->GetImgBuffer(), m_NormalMapImgBuffer);
+		KernelBumpToNormalMap((const unsigned short *)m_HeightMap->GetImage().GetImgBuffer(), m_NormalMap->GetImage().GetImgBuffer());
 	}
 
 	m_Shader->Bind();
 	m_HeightMap->Bind(0);
 	m_Shader->SetUniformInt("u_HSampler", 0);
+	m_HeightMap->UpdateTexture(0);
 	m_NormalMap->Bind(1);
 	m_Shader->SetUniformInt("u_NSampler", 1);
-	m_NormalMap->SetImage(m_NormalMapImgBuffer, 1);
+	m_NormalMap->UpdateTexture(1);
 	m_Va->Bind();
 	m_Ib->Bind();
 

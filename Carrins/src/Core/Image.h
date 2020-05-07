@@ -4,6 +4,7 @@ class Image
 {
 public:
 	Image(const std::string &filepath);
+	Image(const unsigned width, const unsigned height, const unsigned char channels, const unsigned char bitDepth);
 	Image(const unsigned width, const unsigned height, const unsigned char channels, const unsigned char bitDepth, const unsigned char *imgBuffer);
 	~Image();
 
@@ -13,7 +14,7 @@ public:
 	unsigned char GetChannels() const { return m_Channels; }
 	unsigned char GetBitDepth() const { return m_BitDepth; }
 
-	const unsigned char *GetImgBuffer() const { return m_ImgBuffer; }
+	unsigned char *GetImgBuffer() const { return m_ImgBuffer; }
 
 private:
 	unsigned m_Width, m_Height;

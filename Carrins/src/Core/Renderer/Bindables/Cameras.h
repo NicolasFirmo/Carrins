@@ -25,6 +25,9 @@ public:
 	PerspectiveCamera(const Position &pos, const Orientation &ori, float fov = nic::PI / 4, float aspectRation = 16.0f / 9.0f);
 	void Bind(Shader& shader) const override;
 
+	const Position& GetPosition() const;
+	const Orientation& GetOrientation() const;
+
 	void SetPosition(float x, float y, float z);
 	void SetOrientation(float pitch, float yaw, float roll);
 

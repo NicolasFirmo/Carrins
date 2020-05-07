@@ -1,24 +1,24 @@
 #include "Cameras.h"
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtc/matrix_transform.hpp> // Projection Matrices
-#include <glm/gtx/euler_angles.hpp> // eulerAngleYXZ
+#include <glm/gtx/euler_angles.hpp>			// eulerAngleYXZ
 
 #include "Utility/MathConstants.hpp"
 #include "Utility/NumberManipulation.hpp"
 
 #include "Instrumentation/Profile.h"
 
-PerspectiveCamera::PerspectiveCamera(const Position& pos, const Orientation& ori, float fov, float aspectRation)
-	: m_Position(pos), m_Orientation(ori), m_FOV(fov), m_AspectRatio(aspectRation)
+PerspectiveCamera::PerspectiveCamera(const Position &pos, const Orientation &ori, float fov, float aspectRation)
+		: m_Position(pos), m_Orientation(ori), m_FOV(fov), m_AspectRatio(aspectRation)
 {
 }
 
-void PerspectiveCamera::Bind(Shader& shader) const
+void PerspectiveCamera::Bind(Shader &shader) const
 {
 	NIC_PROFILE_FUNCTION();
 
 	auto viewMat = glm::translate(glm::inverse(glm::eulerAngleYXZ(m_Orientation.Yaw, m_Orientation.Pitch, m_Orientation.Roll)),
-		{ -m_Position.X, -m_Position.Y, -m_Position.Z });
+																{-m_Position.X, -m_Position.Y, -m_Position.Z});
 
 	auto projMat = glm::perspective(m_FOV, m_AspectRatio, 0.01f, 150.0f);
 
@@ -36,6 +36,15 @@ void PerspectiveCamera::TransformPosition(float dX, float dY, float dZ)
 	m_Position.X += dX * std::cos(m_Orientation.Yaw) + dZ * std::sin(m_Orientation.Yaw);
 	m_Position.Y += dY;
 	m_Position.Z += -dX * std::sin(m_Orientation.Yaw) + dZ * std::cos(m_Orientation.Yaw);
+}
+
+const PerspectiveCamera::Position &PerspectiveCamera::GetPosition() const
+{
+	return m_Position;
+}
+const PerspectiveCamera::Orientation &PerspectiveCamera::GetOrientation() const
+{
+	return m_Orientation;
 }
 
 void PerspectiveCamera::SetOrientation(float pitch, float yaw, float roll)

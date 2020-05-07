@@ -29,6 +29,7 @@ Image::Image(const std::string &filepath)
 	m_Width = png_get_image_width(png, info);
 	m_Height = png_get_image_height(png, info);
 	m_BitDepth = png_get_bit_depth(png, info);
+	NIC_ASSERT(m_BitDepth >= 8,"Bit depth not suported")
 
 	unsigned char colorType = png_get_color_type(png, info);
 	NIC_ASSERT(
@@ -62,6 +63,16 @@ Image::Image(const std::string &filepath)
 	for (size_t i = 0; i < m_Height; i++)
 		free(row_pointers[i]);
 	free(row_pointers);
+}
+
+Image::Image(const unsigned width, const unsigned height, const unsigned char channels, const unsigned char bitDepth)
+		: m_Width(width), m_Height(height), m_Channels(channels), m_BitDepth(bitDepth)
+{
+	NIC_PROFILE_FUNCTION();
+
+	NIC_ASSERT(!(bitDepth % 8),"bitDepth must be 8 or above multiples")
+	NIC_ASSERT(channels == 1 || channels == 4,"Only images with 1 or 4 channels suported")
+	m_ImgBuffer = new unsigned char[width * bitDepth / 8 * channels * height];
 }
 
 Image::Image(const unsigned width, const unsigned height, const unsigned char channels, const unsigned char bitDepth, const unsigned char *imgBuffer)
