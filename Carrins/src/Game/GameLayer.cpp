@@ -13,9 +13,6 @@
 
 #include "ImGui/ImGuiLayer.h"
 
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/euler_angles.hpp>
-
 #include "Utility/MathConstants.hpp"
 #include "Utility/NumberManipulation.hpp"
 
@@ -71,9 +68,41 @@ void GameLayer::Shutdown()
 	Get().m_Renderer.release();
 }
 
+struct Vec3
+{
+	float x, y, z;
+};
+
+void GameLayer::ResolveColision(Object &obj, const Plane &colisionPlane)
+{
+	const auto relPos = obj.Position - colisionPlane.Position;
+
+	if (float colisionDepth = glm::dot(relPos, colisionPlane.Normal); colisionDepth < 0.0f) // check colision
+	{
+		const auto posRebVector = colisionPlane.Normal * (2 * colisionDepth * obj.RestitutionFactor);
+		obj.Position -= posRebVector;
+		obj.Velocity = glm::reflect(obj.Velocity, colisionPlane.Normal) * obj.RestitutionFactor;
+	}
+}
+
 void GameLayer::OnUpdate(float dt)
 {
-	Get().m_T = nic::Wrap(Get().m_T + dt, nic::PI * 2, 0);
+	auto &obj = Get().m_Obj;
+	auto &ground = Get().m_TestGround;
+	auto &wall = Get().m_TestWall;
+
+	if (Input::IsKeyPressed(GLFW_KEY_P))
+		obj.Velocity.y += 1.0f;
+
+	if (glm::length(glm::dot(obj.Position - ground.Position, ground.Normal)) > c_ResThresh || glm::length(obj.Velocity) > c_ResThresh)
+		obj.Velocity.y += c_G * dt;
+	else
+		obj.Velocity.y *= -c_ResThresh;
+
+	obj.Position += obj.Velocity * dt;
+
+	ResolveColision(obj, ground);
+	ResolveColision(obj, wall);
 }
 
 void GameLayer::OnRender()
@@ -82,16 +111,13 @@ void GameLayer::OnRender()
 
 	auto &renderer = *Get().m_Renderer;
 	auto &camera = *Get().m_Camera;
-	auto t = Get().m_T;
+	auto &obj = Get().m_Obj;
 
 	Get().m_Track->Draw(camera);
 
 	renderer.BeginScene(camera);
 
-	for (int i = -3; i < 3; i++)
-		for (int j = 1; j < 3; j++)
-			for (int k = -3; k < 3; k++)
-				renderer.DrawObject(glm::translate(glm::mat4(1.0f), {4.0f * i, 4.0f * j, 4.0f * k}) * glm::inverse(glm::eulerAngleYXZ(float(i * nic::PI / 8 + t), float(j * nic::PI / 8), float(k * nic::PI / 8))));
+	renderer.DrawObject(glm::translate(glm::mat4(1.0f), {obj.Position.x, obj.Position.y + 1.0f, obj.Position.z}));
 
 	renderer.EndScene();
 }

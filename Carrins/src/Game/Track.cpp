@@ -58,15 +58,6 @@ void Track::Draw(const Camera &camera)
 {
 	NIC_PROFILE_FUNCTION();
 
-	unsigned short *img = reinterpret_cast<unsigned short *>(m_HeightMap->GetImage().GetImgBuffer());
-
-	auto width = m_HeightMap->GetImage().GetWidth();
-	auto height = m_HeightMap->GetImage().GetHeight();
-
-	for (size_t i = (width/2 - 10); i < (width/2 + 10); i++)
-		for (size_t j = (height/2 - 10); j < (height/2 + 10); j++)
-			img[i + width * j] *= 0.999f;
-
 	{
 		NIC_PROFILE_SCOPE("Cuda Kernel");
 		KernelBumpToNormalMap((const unsigned short *)m_HeightMap->GetImage().GetImgBuffer(), m_NormalMap->GetImage().GetImgBuffer());
@@ -75,7 +66,6 @@ void Track::Draw(const Camera &camera)
 	m_Shader->Bind();
 	m_HeightMap->Bind(0);
 	m_Shader->SetUniformInt("u_HSampler", 0);
-	m_HeightMap->UpdateTexture(0);
 	m_NormalMap->Bind(1);
 	m_Shader->SetUniformInt("u_NSampler", 1);
 	m_NormalMap->UpdateTexture(1);
