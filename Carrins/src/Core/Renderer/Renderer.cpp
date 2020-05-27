@@ -38,7 +38,7 @@ void Renderer::BeginScene(const Camera& camera)
 
 void Renderer::DrawObject(const glm::mat4& transform)
 {
-	NIC_PROFILE_FUNCTION();
+	//NIC_PROFILE_FUNCTION();
 
 	m_Shader->SetUniformMat4("u_ModelTransform", transform);
 

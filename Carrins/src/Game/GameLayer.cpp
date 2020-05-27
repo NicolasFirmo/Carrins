@@ -20,7 +20,7 @@
 
 GameLayer GameLayer::s_Instance;
 
-GameLayer &GameLayer::Get()
+GameLayer& GameLayer::Get()
 {
 	return s_Instance;
 }
@@ -32,17 +32,17 @@ void GameLayer::Init(float aspectRatio)
 	Get().m_Running = true;
 
 	Get().m_Camera = std::make_unique<PerspectiveCamera>(
-			PerspectiveCamera::Position{2.0f, 2.0f, 2.0f},
-			PerspectiveCamera::Orientation{-float(nic::PI) / 4, float(nic::PI) / 4},
-			float(nic::PI) / 3,
-			aspectRatio);
+		PerspectiveCamera::Position{ 2.0f, 2.0f, 2.0f },
+		PerspectiveCamera::Orientation{ -float(nic::PI) / 4, float(nic::PI) / 4 },
+		float(nic::PI) / 3,
+		aspectRatio);
 
 	Get().m_Track = std::make_unique<Track>("Test");
 
 	Get().m_Renderer = std::make_unique<Renderer>("Cubo.obj", "BasicShader.glsl");
 
 	Get().m_cameraCtrlThread = std::make_unique<std::thread>([]() {
-		auto &running = Get().m_Running;
+		auto& running = Get().m_Running;
 		float dt = 0.0f;
 		std::chrono::time_point<std::chrono::high_resolution_clock> tp = std::chrono::high_resolution_clock::now();
 
@@ -54,7 +54,14 @@ void GameLayer::Init(float aspectRatio)
 			ControllCamera(dt);
 			std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		}
-	});
+		});
+
+	auto& cubes = Get().m_Cubes;
+
+	for (size_t i = 0; i < 300; i++)
+		for (size_t k = 0; k < 300; k++)
+			cubes.emplace_back(1.0f, 0.166666667f, 0.8f, glm::vec3{ -1.0f * k, 1.0f * (2 * k + i), -1.0f * i }, glm::vec3{ 0.0f, 0.0f, 0.0f }, glm::vec3{ 0.0f, 0.0f, 0.0f });
+
 }
 void GameLayer::Shutdown()
 {
@@ -68,65 +75,58 @@ void GameLayer::Shutdown()
 	Get().m_Renderer.release();
 }
 
-struct Vec3
-{
-	float x, y, z;
-};
-
-void GameLayer::ResolveColision(Object &obj, const Plane &colisionPlane)
-{
-	const auto relPos = obj.Position - colisionPlane.Position;
-
-	if (float colisionDepth = glm::dot(relPos, colisionPlane.Normal); colisionDepth < 0.0f) // check colision
-	{
-		const auto posRebVector = colisionPlane.Normal * (2 * colisionDepth * obj.RestitutionFactor);
-		obj.Position -= posRebVector;
-		obj.Velocity = glm::reflect(obj.Velocity, colisionPlane.Normal) * obj.RestitutionFactor;
-	}
-}
-
 void GameLayer::OnUpdate(float dt)
 {
-	auto &obj = Get().m_Obj;
-	auto &ground = Get().m_TestGround;
-	auto &wall = Get().m_TestWall;
+	NIC_PROFILE_FUNCTION();
 
-	if (Input::IsKeyPressed(GLFW_KEY_P))
-		obj.Velocity.y += 1.0f;
+	auto& cubes = Get().m_Cubes;
 
-	if (glm::length(glm::dot(obj.Position - ground.Position, ground.Normal)) > c_ResThresh || glm::length(obj.Velocity) > c_ResThresh)
-		obj.Velocity.y += c_G * dt;
-	else
-		obj.Velocity.y *= -c_ResThresh;
-
-	obj.Position += obj.Velocity * dt;
-
-	ResolveColision(obj, ground);
-	ResolveColision(obj, wall);
+	for (auto& cube : cubes)
+	{
+		if (cube.GetPosition().y <= 0.5f && cube.GetLinearVelocity().y < 0)
+		{
+			//DebugLog("Before colision:\nPos:" << cube.GetPosition().y << "\nVel: " << cube.GetLinearVelocity().y << '\n');
+			cube.Colide(glm::vec3{ 0.0f, 1.0f, 0.0f }, glm::vec3{ cube.GetPosition().x, 0.0f, cube.GetPosition().z });
+			cube.Update(dt);
+			//DebugLog("After colision:\nPos:" << cube.GetPosition().y << "\nVel: " << cube.GetLinearVelocity().y << '\n');
+		}
+		else if (cube.GetPosition().y > 0.5f + c_ResThresh)
+		{
+			cube.Drag(glm::vec3{ 0.0f, c_G * dt,0.0f });
+			cube.Update(dt);
+		}
+		else
+		{
+			if (glm::length(cube.GetLinearVelocity()) < 0.1f)
+				cube.Drag(-cube.GetLinearVelocity());
+			cube.Update(dt);
+		}
+	}
 }
 
 void GameLayer::OnRender()
 {
 	NIC_PROFILE_FUNCTION();
 
-	auto &renderer = *Get().m_Renderer;
-	auto &camera = *Get().m_Camera;
-	auto &obj = Get().m_Obj;
+	auto& renderer = *Get().m_Renderer;
+	auto& camera = *Get().m_Camera;
+	auto& cubes = Get().m_Cubes;
 
 	Get().m_Track->Draw(camera);
 
 	renderer.BeginScene(camera);
 
-	renderer.DrawObject(glm::translate(glm::mat4(1.0f), {obj.Position.x, obj.Position.y + 1.0f, obj.Position.z}));
+	for (auto& cube : cubes)
+		renderer.DrawObject(glm::translate(glm::mat4(1.0f), cube.GetPosition()));
 
 	renderer.EndScene();
 }
 
-void GameLayer::OnEvent(Event &e)
+void GameLayer::OnEvent(Event& e)
 {
 	NIC_PROFILE_FUNCTION();
 
-	e.Dispatch<ResizeEvent>([](ResizeEvent &e) {
+	e.Dispatch<ResizeEvent>([](ResizeEvent& e) {
 		NIC_PROFILE_SCOPE("App ResizeEvent dispatch");
 		if (e.Height && e.Width)
 		{
@@ -134,12 +134,12 @@ void GameLayer::OnEvent(Event &e)
 			return true;
 		}
 		return false;
-	});
+		});
 }
 
 void GameLayer::ControllCamera(float dt)
 {
-	auto &camera = *Get().m_Camera;
+	auto& camera = *Get().m_Camera;
 
 	if (Input::IsKeyPressed(GLFW_KEY_W))
 		camera.TransformPosition(0.0f, 0.0f, -dt);

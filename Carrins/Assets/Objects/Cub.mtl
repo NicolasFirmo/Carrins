@@ -1,0 +1,12 @@
+# Blender MTL File: 'Turo.blend'
+# Material Count: 1
+
+newmtl Material
+Ns 261.502070
+Ka 1.000000 1.000000 1.000000
+Kd 0.015554 0.000000 0.800000
+Ks 0.866197 0.866197 0.866197
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2

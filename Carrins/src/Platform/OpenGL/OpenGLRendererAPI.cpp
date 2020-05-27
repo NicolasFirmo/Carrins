@@ -55,7 +55,7 @@ void OpenGLRendererAPI::DisableDepthTesting_() const
 }
 void OpenGLRendererAPI::Draw_(const size_t indexCount) const
 {
-	NIC_PROFILE_FUNCTION();
+	//NIC_PROFILE_FUNCTION();
 
 	GLCall(glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr));
 }

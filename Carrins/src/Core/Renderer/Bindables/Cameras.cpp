@@ -20,7 +20,7 @@ void PerspectiveCamera::Bind(Shader &shader) const
 	auto viewMat = glm::translate(glm::inverse(glm::eulerAngleYXZ(m_Orientation.Yaw, m_Orientation.Pitch, m_Orientation.Roll)),
 																{-m_Position.X, -m_Position.Y, -m_Position.Z});
 
-	auto projMat = glm::perspective(m_FOV, m_AspectRatio, 0.01f, 150.0f);
+	auto projMat = glm::perspective(m_FOV, m_AspectRatio, 0.01f, 4500.0f);
 
 	shader.SetUniformMat4("u_ViewProjection", projMat * viewMat);
 }
