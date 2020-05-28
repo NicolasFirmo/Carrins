@@ -58,9 +58,11 @@ void GameLayer::Init(float aspectRatio)
 
 	auto& cubes = Get().m_Cubes;
 
-	for (size_t i = 0; i < 300; i++)
-		for (size_t k = 0; k < 300; k++)
-			cubes.emplace_back(1.0f, 0.166666667f, 0.8f, glm::vec3{ -1.0f * k, 1.0f * (2 * k + i), -1.0f * i }, glm::vec3{ 0.0f, 0.0f, 0.0f }, glm::vec3{ 0.0f, 0.0f, 0.0f });
+	for (size_t i = 0; i < 100; i++)
+		for (size_t k = 0; k < 100; k++)
+			cubes.emplace_back(1.0f, 0.7f, 0.5f, 0.5f, 0.5f,
+				glm::vec3{ -1.0f * k, 1.5f + 1.0f * (2 * k + i), -1.0f * i }, glm::quat{ 1.0f,0.0f,0.0f,0.0f },
+				glm::vec3{ 0.0f, -0.1f, 0.0f }, glm::vec3{ 0.2f, 0.0f, 0.3f });
 
 }
 void GameLayer::Shutdown()
@@ -83,24 +85,44 @@ void GameLayer::OnUpdate(float dt)
 
 	for (auto& cube : cubes)
 	{
-		if (cube.GetPosition().y <= 0.5f && cube.GetLinearVelocity().y < 0)
+		if (Input::IsKeyPressed(GLFW_KEY_P))
+			cube.Thrust({ 0,20.0f * dt,0 }, { 0,-0.5,0.1f });
+		if (Input::IsKeyPressed(GLFW_KEY_O))
+			cube.Thrust({ 0,-20.0f * dt,0 }, { 0,-0.5,0.1f });
+		if (Input::IsKeyPressed(GLFW_KEY_V))
+			cube.Thrust({ 0,20.0f * dt,2.0f * dt }, { 0.2,-0.5,0.4 });
+		if (Input::IsKeyPressed(GLFW_KEY_C))
+			cube.Thrust({ 0,20.0f * -dt,2.0f * -dt }, { 0.2,-0.5,0.4 });
+
+		glm::vec3 colidedVerticeSum{ 0.0f, 0.0f, 0.0f };
+		size_t colisionCount = 0;
+		float depthFactor = 0.0f;
+		for (auto&& vertice : cube.GetVertices())
+			if (float depth = 0.0f - vertice.y; depth > 0.0f)
+			{
+				if (depth > depthFactor)
+				{
+					colisionCount = 1;
+					colidedVerticeSum = vertice;
+					depthFactor = depth;
+				}
+				else if (depth == depthFactor)
+				{
+					colisionCount++;
+					colidedVerticeSum += vertice;
+				}
+			}
+
+		if (colisionCount)
 		{
-			//DebugLog("Before colision:\nPos:" << cube.GetPosition().y << "\nVel: " << cube.GetLinearVelocity().y << '\n');
-			cube.Colide(glm::vec3{ 0.0f, 1.0f, 0.0f }, glm::vec3{ cube.GetPosition().x, 0.0f, cube.GetPosition().z });
-			cube.Update(dt);
-			//DebugLog("After colision:\nPos:" << cube.GetPosition().y << "\nVel: " << cube.GetLinearVelocity().y << '\n');
+			const auto contactPoint = colidedVerticeSum / float(colisionCount);
+			cube.Colide(glm::vec3{ 0.0f, 1.0f, 0.0f }, contactPoint, depthFactor);
 		}
-		else if (cube.GetPosition().y > 0.5f + c_ResThresh)
-		{
-			cube.Drag(glm::vec3{ 0.0f, c_G * dt,0.0f });
-			cube.Update(dt);
-		}
-		else
-		{
-			if (glm::length(cube.GetLinearVelocity()) < 0.1f)
-				cube.Drag(-cube.GetLinearVelocity());
-			cube.Update(dt);
-		}
+
+		cube.TransformLinearVelocity(glm::vec3{ 0.0f, c_G * dt ,0.0f });
+
+		cube.Update(dt);
+
 	}
 }
 
@@ -117,7 +139,7 @@ void GameLayer::OnRender()
 	renderer.BeginScene(camera);
 
 	for (auto& cube : cubes)
-		renderer.DrawObject(glm::translate(glm::mat4(1.0f), cube.GetPosition()));
+		renderer.DrawObject(cube.GetTransfomation());
 
 	renderer.EndScene();
 }

@@ -1,29 +1,44 @@
 #pragma once
 #include "glm/glm.hpp"
+#include "glm/gtx/quaternion.hpp"
 
 class Solid
 {
 public:
 	Solid() = default;
-	Solid(float mass,float rotationalInertia, float restitutionFactor, const glm::vec3& position, const glm::vec3& initialLinearVelocity, const glm::vec3& initialAngularVelocity);
+	Solid(float mass, float restitutionFactor, float rX, float rY, float rZ, const glm::vec3& initialPosition, const glm::quat& initialOrientation, const glm::vec3& initialLinearVelocity, const glm::vec3& initialAngularVelocity);
 
 	void Update(const float deltaTime);
 
 	void Colide(Solid& other, const glm::vec3& colisionNormal, const glm::vec3& contactPoint);
-	void Colide(const glm::vec3& colisionNormal, const glm::vec3& contactPoint);
+	void Colide(const glm::vec3& colisionNormal, const glm::vec3& contactPoint, const float colisionDepth);
 
 	void Thrust(const glm::vec3& impulse, const glm::vec3& applicationPoint);
-	void Drag(const glm::vec3& deltaVelocity);
+
+	float GetRotationalInertia(const glm::vec3& rotationAxisDirection) const;
+
+	glm::mat4 GetTransfomation() const;
 
 	const glm::vec3& GetPosition() const { return m_Position; }
+	std::array<glm::vec3, 8> GetVertices() const;
+
 	const glm::vec3& GetLinearVelocity() const { return m_LinearVelocity; }
+	void TransformLinearVelocity(const glm::vec3& deltaVelocity);
+
+	const glm::vec3& GetAngularVelocity() const { return m_AngularVelocity; }
+	void TransformAngularVelocity(const glm::vec3& deltaVelocity);
 
 private:
 	const float m_Mass;
-	float m_RotationalInertia;
 	const float m_RestitutionFactor;
 
+	const float m_Rx;
+	const float m_Ry;
+	const float m_Rz;
+
 	glm::vec3 m_Position;
+	glm::quat m_Orientation;
+
 	glm::vec3 m_LinearVelocity;
 	glm::vec3 m_AngularVelocity;
 };
