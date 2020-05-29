@@ -119,7 +119,7 @@ void GameLayer::OnUpdate(float dt)
 
 				NIC_ASSERT(contactPoint.y <= 0.0f, "Ponto de contato acima do chão");
 
-				cube.Colide(glm::vec3{ 0.0f, 1.0f, 0.0f }, contactPoint, -contactPoint.y);
+				cube.Colide(glm::vec3{ 0.0f, 1.0f, 0.0f }, contactPoint, -contactPoint.y, 1.0f);
 			}
 
 			cube.TransformLinearVelocity(glm::vec3{ 0.0f, c_G * dt ,0.0f });

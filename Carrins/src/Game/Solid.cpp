@@ -3,7 +3,7 @@
 #include "Core.h"
 
 Solid::Solid(float mass, float restitutionFactor, float rX, float rY, float rZ, const glm::vec3& initialPosition, const glm::quat& initialOrientation, const glm::vec3& initialLinearVelocity, const glm::vec3& initialAngularVelocity) :
-	m_Mass(mass), m_RestitutionFactor(restitutionFactor), m_Rx(rX), m_Ry(rY), m_Rz(rZ),
+	m_Mass(mass), m_2verticesMass(m_Mass / 12), m_RestitutionFactor(restitutionFactor), m_Rx(rX), m_Ry(rY), m_Rz(rZ),
 	m_Position(initialPosition), m_Orientation(initialOrientation), m_LinearVelocity(initialLinearVelocity), m_AngularVelocity(initialAngularVelocity)
 {
 }
@@ -55,31 +55,55 @@ void Solid::Colide(Solid& other, const glm::vec3& colisionNormal, const glm::vec
 	//other.Thrust(-colisionImpulse, r2);
 }
 
-void Solid::Colide(const glm::vec3& colisionNormal, const glm::vec3& contactPoint, const float colisionDepth)
+void Solid::Colide(const glm::vec3& colisionNormal, const glm::vec3& contactPoint, const float colisionDepth, const float wallRestitutionFactor)
 {
-	const float colisionRestitutionFactor = m_RestitutionFactor;
-
 	const glm::vec3 r = contactPoint - m_Position;
 
 	const glm::vec3 effectiveRadius = glm::cross(r, colisionNormal);
 
-	const auto aparentRotationInertia = GetRotationalInertia(effectiveRadius);
+	const float colisionRestitutionFactor = sqrt(m_RestitutionFactor * wallRestitutionFactor);
 
-	const float effectiveMass = m_Mass / (1.0f + (aparentRotationInertia > 0.0f ? (glm::dot(effectiveRadius, effectiveRadius) / aparentRotationInertia) : 0.0f));
+	if (glm::length2(effectiveRadius))
+		ColideWithTorque(colisionNormal, colisionDepth, r, effectiveRadius, colisionRestitutionFactor);
+	else
+		ColideWithoutTorque(colisionNormal, colisionDepth, colisionRestitutionFactor);
+}
+
+void Solid::ColideWithTorque(const glm::vec3& colisionNormal, const float colisionDepth, const glm::vec3& r, const glm::vec3& effectiveRadius, const float colisionRestitutionFactor)
+{
+	const auto aparentRotationInertia = GetRotationalInertia(glm::normalize(effectiveRadius));
+
+	const float effectiveMass = m_Mass / (1.0f + (glm::dot(effectiveRadius, effectiveRadius) / aparentRotationInertia));
 
 	const auto rotation = glm::toMat3(m_Orientation);
 	const auto worldAngularvelocity = rotation * m_AngularVelocity;
-	const auto test = glm::cross(worldAngularvelocity, r);
 	const float ApproximationVelocity = glm::dot(colisionNormal, -(m_LinearVelocity + glm::cross(worldAngularvelocity, r)));
 
 	const float inelasticImpulseMagnitude = effectiveMass * ApproximationVelocity;
 
-	const glm::vec3 colisionImpulse = colisionNormal * (inelasticImpulseMagnitude * (1 + colisionRestitutionFactor));
+	const auto rebound = colisionNormal * (1 + colisionRestitutionFactor);
+	const glm::vec3 colisionImpulse = inelasticImpulseMagnitude * rebound;
 
-	Thrust(colisionImpulse, r);
+	Thrust(colisionImpulse, r, rotation, aparentRotationInertia);
 
-	m_Position += colisionNormal * (colisionDepth * (1 + colisionRestitutionFactor)) * (1.0f - glm::length(effectiveRadius) / glm::length(r));
+	m_Position += colisionDepth * rebound * (1.0f - glm::length(effectiveRadius) / glm::length(r));
+}
 
+void Solid::ColideWithoutTorque(const glm::vec3& colisionNormal, const float colisionDepth, const float colisionRestitutionFactor)
+{
+	const float ApproximationVelocity = glm::dot(colisionNormal, -m_LinearVelocity);
+
+	const auto rebound = colisionNormal * (1 + colisionRestitutionFactor);
+	const glm::vec3 colisionDV = ApproximationVelocity * rebound;
+
+	TransformLinearVelocity(colisionDV);
+
+	m_Position += colisionDepth * rebound;
+}
+
+void Solid::Thrust(const glm::vec3& impulse)
+{
+	TransformLinearVelocity(impulse / m_Mass);
 }
 
 void Solid::Thrust(const glm::vec3& impulse, const glm::vec3& applicationPoint)
@@ -87,65 +111,48 @@ void Solid::Thrust(const glm::vec3& impulse, const glm::vec3& applicationPoint)
 	TransformLinearVelocity(impulse / m_Mass);
 
 	const auto rotation = glm::toMat3(m_Orientation);
-	const auto worldAngularvelocity = rotation * m_AngularVelocity;
+	const auto leverage = glm::cross(applicationPoint, impulse);
 
-	if (const auto RotationInertia = GetRotationalInertia(glm::cross(impulse, applicationPoint)); RotationInertia > 0.0f)
-		TransformAngularVelocity((glm::inverse(rotation) * glm::cross(applicationPoint, impulse)) / (m_Mass * RotationInertia));
+	if (const auto RotationInertia = GetRotationalInertia(glm::normalize(leverage)); RotationInertia > 0.0f)
+		TransformAngularVelocity((glm::inverse(rotation) * leverage) / (m_Mass * RotationInertia));
 }
 
-void Solid::TransformLinearVelocity(const glm::vec3& deltaVelocity)
+void Solid::Thrust(const glm::vec3& impulse, const glm::vec3& applicationPoint, const glm::mat3& rotation, const float rotationInertia)
 {
-	m_LinearVelocity += deltaVelocity;
+	TransformLinearVelocity(impulse / m_Mass);
+	TransformAngularVelocity((glm::inverse(rotation) * glm::cross(applicationPoint, impulse)) / (m_Mass * rotationInertia));
 }
 
-void Solid::TransformAngularVelocity(const glm::vec3& deltaVelocity)
+float Solid::GetRotationalInertia(const glm::vec3& rotationAxisDirectionNormalized) const noexcept
 {
-	m_AngularVelocity += deltaVelocity;
-}
-
-float Solid::GetRotationalInertia(const glm::vec3& rotationAxisDirection) const noexcept
-{
-	auto angle = glm::length(rotationAxisDirection);
-	if (angle <= 0.0f)
-		return 0.0f;
-
-	auto dir = rotationAxisDirection / angle;
-
-	const float verticeMass = (m_Mass * 1 / 3) / 8;
-
-	const auto r1 = glm::cross(dir, glm::vec3{ m_Rx,m_Ry,m_Rz });
-	const auto r2 = glm::cross(dir, glm::vec3{ m_Rx,m_Ry,-m_Rz });
-	const auto r3 = glm::cross(dir, glm::vec3{ m_Rx,-m_Ry,m_Rz });
-	const auto r4 = glm::cross(dir, glm::vec3{ m_Rx,-m_Ry,-m_Rz });
-	const auto r5 = glm::cross(dir, glm::vec3{ -m_Rx,m_Ry,m_Rz });
-	const auto r6 = glm::cross(dir, glm::vec3{ -m_Rx,m_Ry,-m_Rz });
-	const auto r7 = glm::cross(dir, glm::vec3{ -m_Rx,-m_Ry,m_Rz });
-	const auto r8 = glm::cross(dir, glm::vec3{ -m_Rx,-m_Ry,-m_Rz });
+	const auto r1 = glm::cross(rotationAxisDirectionNormalized, glm::vec3{ m_Rx,m_Ry,m_Rz });
+	const auto r2 = glm::cross(rotationAxisDirectionNormalized, glm::vec3{ m_Rx,m_Ry,-m_Rz });
+	const auto r3 = glm::cross(rotationAxisDirectionNormalized, glm::vec3{ m_Rx,-m_Ry,m_Rz });
+	const auto r4 = glm::cross(rotationAxisDirectionNormalized, glm::vec3{ m_Rx,-m_Ry,-m_Rz });
+	//const auto r5 = glm::cross(rotationAxisDirectionNormalized, glm::vec3{ -m_Rx,m_Ry,m_Rz });
+	//const auto r6 = glm::cross(rotationAxisDirectionNormalized, glm::vec3{ -m_Rx,m_Ry,-m_Rz });
+	//const auto r7 = glm::cross(rotationAxisDirectionNormalized, glm::vec3{ -m_Rx,-m_Ry,m_Rz });
+	//const auto r8 = glm::cross(rotationAxisDirectionNormalized, glm::vec3{ -m_Rx,-m_Ry,-m_Rz });
 
 	const auto R1pow2 = glm::dot(r1, r1);
 	const auto R2pow2 = glm::dot(r2, r2);
 	const auto R3pow2 = glm::dot(r3, r3);
 	const auto R4pow2 = glm::dot(r4, r4);
-	const auto R5pow2 = glm::dot(r5, r5);
-	const auto R6pow2 = glm::dot(r6, r6);
-	const auto R7pow2 = glm::dot(r7, r7);
-	const auto R8pow2 = glm::dot(r8, r8);
+	//const auto R5pow2 = glm::dot(r5, r5);
+	//const auto R6pow2 = glm::dot(r6, r6);
+	//const auto R7pow2 = glm::dot(r7, r7);
+	//const auto R8pow2 = glm::dot(r8, r8);
 
-	return verticeMass * (
+	return m_2verticesMass * (
 		R1pow2 +
 		R2pow2 +
 		R3pow2 +
-		R4pow2 +
-		R5pow2 +
-		R6pow2 +
-		R7pow2 +
-		R8pow2
+		R4pow2 //+
+		//R5pow2 +
+		//R6pow2 +
+		//R7pow2 +
+		//R8pow2
 		);
-}
-
-glm::mat4 Solid::GetTransfomation() const noexcept
-{
-	return glm::translate(glm::mat4(1.0f), m_Position) * glm::toMat4(m_Orientation);
 }
 
 std::array<glm::vec3, 8> Solid::GetVertices() const
@@ -171,4 +178,9 @@ std::array<glm::vec3, 8> Solid::GetVertices() const
 	r7,
 	r8,
 	};
+}
+
+glm::mat4 Solid::GetTransfomation() const noexcept
+{
+	return glm::translate(glm::mat4(1.0f), m_Position) * glm::toMat4(m_Orientation);
 }
