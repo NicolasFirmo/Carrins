@@ -15,22 +15,25 @@ public:
 
 	void Thrust(const glm::vec3& impulse, const glm::vec3& applicationPoint);
 
-	float GetRotationalInertia(const glm::vec3& rotationAxisDirection) const;
+	float GetRestitutionFactor() const noexcept { return m_RestitutionFactor; }
+	void SetRestitutionFactor(float restitutionFactor) noexcept { m_RestitutionFactor = restitutionFactor; }
 
-	glm::mat4 GetTransfomation() const;
+	float GetRotationalInertia(const glm::vec3& rotationAxisDirection) const noexcept;
 
-	const glm::vec3& GetPosition() const { return m_Position; }
+	glm::mat4 GetTransfomation() const noexcept;
+
+	const glm::vec3& GetPosition() const noexcept { return m_Position; }
 	std::array<glm::vec3, 8> GetVertices() const;
 
-	const glm::vec3& GetLinearVelocity() const { return m_LinearVelocity; }
+	const glm::vec3& GetLinearVelocity() const noexcept { return m_LinearVelocity; }
 	void TransformLinearVelocity(const glm::vec3& deltaVelocity);
 
-	const glm::vec3& GetAngularVelocity() const { return m_AngularVelocity; }
+	const glm::vec3& GetAngularVelocity() const noexcept { return m_AngularVelocity; }
 	void TransformAngularVelocity(const glm::vec3& deltaVelocity);
 
 private:
-	const float m_Mass;
-	const float m_RestitutionFactor;
+	float m_Mass;
+	float m_RestitutionFactor;
 
 	const float m_Rx;
 	const float m_Ry;

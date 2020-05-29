@@ -4,7 +4,7 @@
 #include <glm/gtx/euler_angles.hpp>			// eulerAngleYXZ
 
 #include "Utility/MathConstants.hpp"
-#include "Utility/NumberManipulation.hpp"
+#include "Utility/Manip.hpp"
 
 #include "Instrumentation/Profile.h"
 
@@ -49,15 +49,15 @@ const PerspectiveCamera::Orientation &PerspectiveCamera::GetOrientation() const
 
 void PerspectiveCamera::SetOrientation(float pitch, float yaw, float roll)
 {
-	m_Orientation.Pitch = nic::Clamp(pitch, nic::PI / 2, -nic::PI / 2);
-	m_Orientation.Yaw = nic::Wrap(yaw, nic::PI, -nic::PI);
-	m_Orientation.Roll = nic::Wrap(roll, 2 * nic::PI, -2 * nic::PI);
+	m_Orientation.Pitch = nic::Clamp(pitch, float(nic::PI) / 2, -float(nic::PI) / 2);
+	m_Orientation.Yaw = nic::Wrap(yaw, float(nic::PI), -float(nic::PI));
+	m_Orientation.Roll = nic::Wrap(roll, 2 * float(nic::PI), -2 * float(nic::PI));
 }
 void PerspectiveCamera::TransformOrientation(float dPitch, float dYaw, float dRoll)
 {
-	m_Orientation.Pitch = nic::Clamp(m_Orientation.Pitch + dPitch, nic::PI / 2, -nic::PI / 2);
-	m_Orientation.Yaw = nic::Wrap(m_Orientation.Yaw + dYaw, nic::PI, -nic::PI);
-	m_Orientation.Roll = nic::Wrap(m_Orientation.Roll + dRoll, 2 * nic::PI, -2 * nic::PI);
+	m_Orientation.Pitch = nic::Clamp(m_Orientation.Pitch + dPitch, float(nic::PI) / 2, -float(nic::PI) / 2);
+	m_Orientation.Yaw = nic::Wrap(m_Orientation.Yaw + dYaw, float(nic::PI), -float(nic::PI));
+	m_Orientation.Roll = nic::Wrap(m_Orientation.Roll + dRoll, 2 * float(nic::PI), -2 * float(nic::PI));
 }
 
 void PerspectiveCamera::SetFOV(float fov)

@@ -6,7 +6,7 @@
 class ImGuiLayer
 {
 public:
-	static void OnFrame(float dt, bool& vSync, bool& fullScreen);
+	static void OnFrame(float dt, bool& vSync, bool& fullScreen, float& COR);
 
 	static void Init(GLFWwindow* window,const char* glsl_version);
 	static void Shutdown();

@@ -18,10 +18,10 @@ void Solid::Update(const float deltaTime)
 		auto dAngle = angle * deltaTime;
 
 		glm::quat rotation = {
-			cos(dAngle / 2),
-			dir.x * sin(dAngle / 2),
-			dir.y * sin(dAngle / 2),
-			dir.z * sin(dAngle / 2)
+			std::cos(dAngle / 2),
+			dir.x * std::sin(dAngle / 2),
+			dir.y * std::sin(dAngle / 2),
+			dir.z * std::sin(dAngle / 2)
 		};
 
 		m_Orientation *= rotation;
@@ -72,17 +72,14 @@ void Solid::Colide(const glm::vec3& colisionNormal, const glm::vec3& contactPoin
 	const auto test = glm::cross(worldAngularvelocity, r);
 	const float ApproximationVelocity = glm::dot(colisionNormal, -(m_LinearVelocity + glm::cross(worldAngularvelocity, r)));
 
-	//NIC_ASSERT(ApproximationVelocity > 0.0f, "vAprr went negative!");
-	//if (ApproximationVelocity <= 0.0f)
-		//return;
-
 	const float inelasticImpulseMagnitude = effectiveMass * ApproximationVelocity;
 
 	const glm::vec3 colisionImpulse = colisionNormal * (inelasticImpulseMagnitude * (1 + colisionRestitutionFactor));
 
-	m_Position += colisionNormal * (colisionDepth * (1 + colisionRestitutionFactor));
-
 	Thrust(colisionImpulse, r);
+
+	m_Position += colisionNormal * (colisionDepth * (1 + colisionRestitutionFactor)) * (1.0f - glm::length(effectiveRadius) / glm::length(r));
+
 }
 
 void Solid::Thrust(const glm::vec3& impulse, const glm::vec3& applicationPoint)
@@ -106,7 +103,7 @@ void Solid::TransformAngularVelocity(const glm::vec3& deltaVelocity)
 	m_AngularVelocity += deltaVelocity;
 }
 
-float Solid::GetRotationalInertia(const glm::vec3& rotationAxisDirection) const
+float Solid::GetRotationalInertia(const glm::vec3& rotationAxisDirection) const noexcept
 {
 	auto angle = glm::length(rotationAxisDirection);
 	if (angle <= 0.0f)
@@ -146,7 +143,7 @@ float Solid::GetRotationalInertia(const glm::vec3& rotationAxisDirection) const
 		);
 }
 
-glm::mat4 Solid::GetTransfomation() const
+glm::mat4 Solid::GetTransfomation() const noexcept
 {
 	return glm::translate(glm::mat4(1.0f), m_Position) * glm::toMat4(m_Orientation);
 }

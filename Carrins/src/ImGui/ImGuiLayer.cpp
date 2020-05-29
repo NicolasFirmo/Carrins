@@ -45,14 +45,14 @@ void ImGuiLayer::EndFrame()
 	}
 }
 
-void ImGuiLayer::OnFrame(float dt, bool& vSync, bool& fullScreen)
+void ImGuiLayer::OnFrame(float dt, bool& vSync, bool& fullScreen, float& COR)
 {
 	NIC_PROFILE_FUNCTION();
 
 	if (!s_Enabled)
 		return;
 
-	s_Dts.Push(dt);
+	s_Dts.Put(dt);
 
 	BeginFrame();
 
@@ -64,6 +64,12 @@ void ImGuiLayer::OnFrame(float dt, bool& vSync, bool& fullScreen)
 		ImGui::Checkbox("VSync", &vSync);
 		ImGui::NextColumn();
 		ImGui::Checkbox("Tela cheia", &fullScreen);
+	}
+	ImGui::End();
+
+	if (ImGui::Begin("Cubos"))
+	{
+		ImGui::SliderFloat("Coeficiente de restituição", &COR, 0.0f, 1.0f);
 	}
 	ImGui::End();
 

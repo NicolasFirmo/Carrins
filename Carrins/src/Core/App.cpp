@@ -104,7 +104,7 @@ void App::DoFrame(float dt)
 	RendererAPI::Clear();
 	GameLayer::OnRender();
 
-	ImGuiLayer::OnFrame(dt, vSync, fullScreen);
+	ImGuiLayer::OnFrame(dt, vSync, fullScreen, GameLayer::s_COR);
 
 	window.Update(vSync, fullScreen);
 }

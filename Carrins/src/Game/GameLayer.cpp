@@ -14,7 +14,7 @@
 #include "ImGui/ImGuiLayer.h"
 
 #include "Utility/MathConstants.hpp"
-#include "Utility/NumberManipulation.hpp"
+#include "Utility/Manip.hpp"
 
 #include "Instrumentation/Profile.h"
 
@@ -24,6 +24,8 @@ GameLayer& GameLayer::Get()
 {
 	return s_Instance;
 }
+
+float GameLayer::s_COR = 1.0f;
 
 void GameLayer::Init(float aspectRatio)
 {
@@ -60,9 +62,9 @@ void GameLayer::Init(float aspectRatio)
 
 	for (size_t i = 0; i < 100; i++)
 		for (size_t k = 0; k < 100; k++)
-			cubes.emplace_back(1.0f, 0.7f, 0.5f, 0.5f, 0.5f,
-				glm::vec3{ -1.0f * k, 1.5f + 1.0f * (2 * k + i), -1.0f * i }, glm::quat{ 1.0f,0.0f,0.0f,0.0f },
-				glm::vec3{ 0.0f, -0.1f, 0.0f }, glm::vec3{ 0.2f, 0.0f, 0.3f });
+			cubes.emplace_back(1.0f, 1.0f, 0.5f, 0.5f, 0.5f,
+				glm::vec3{ -float(nic::SQRT3) * k, 1.5f + 1.0f * (2 * k + i), -float(nic::SQRT3) * i }, glm::quat{ 1.0f,0.0f,0.0f,0.0f },
+				glm::vec3{ 0.0f, -0.1f, 0.0f }, glm::vec3{ 0.0f, 0.0f, 0.0f });
 
 }
 void GameLayer::Shutdown()
@@ -83,47 +85,47 @@ void GameLayer::OnUpdate(float dt)
 
 	auto& cubes = Get().m_Cubes;
 
-	for (auto& cube : cubes)
-	{
-		if (Input::IsKeyPressed(GLFW_KEY_P))
-			cube.Thrust({ 0,20.0f * dt,0 }, { 0,-0.5,0.1f });
-		if (Input::IsKeyPressed(GLFW_KEY_O))
-			cube.Thrust({ 0,-20.0f * dt,0 }, { 0,-0.5,0.1f });
-		if (Input::IsKeyPressed(GLFW_KEY_V))
-			cube.Thrust({ 0,20.0f * dt,2.0f * dt }, { 0.2,-0.5,0.4 });
-		if (Input::IsKeyPressed(GLFW_KEY_C))
-			cube.Thrust({ 0,20.0f * -dt,2.0f * -dt }, { 0.2,-0.5,0.4 });
+	static constexpr size_t subdivisionsPerFrame = 3;
 
-		glm::vec3 colidedVerticeSum{ 0.0f, 0.0f, 0.0f };
-		size_t colisionCount = 0;
-		float depthFactor = 0.0f;
-		for (auto&& vertice : cube.GetVertices())
-			if (float depth = 0.0f - vertice.y; depth > 0.0f)
+	dt /= subdivisionsPerFrame;
+
+	for (size_t i = 0; i < subdivisionsPerFrame; i++)
+		for (auto& cube : cubes)
+		{
+			if (Input::IsKeyPressed(GLFW_KEY_P))
+				cube.Thrust({ 0,20.0f * dt,0 }, { 0,-0.5,0.1f });
+			if (Input::IsKeyPressed(GLFW_KEY_O))
+				cube.Thrust({ 0,-20.0f * dt,0 }, { 0,-0.5,0.1f });
+			if (Input::IsKeyPressed(GLFW_KEY_V))
+				cube.Thrust({ 0,20.0f * dt,2.0f * dt }, { 0.2,-0.5,0.4 });
+			if (Input::IsKeyPressed(GLFW_KEY_C))
+				cube.Thrust({ 0,20.0f * -dt,2.0f * -dt }, { 0.2,-0.5,0.4 });
+
+			cube.SetRestitutionFactor(s_COR);
+
+			glm::vec3 colidedVerticeSum{ 0.0f, 0.0f, 0.0f };
+			size_t colisionCount = 0;
+			float depthFactor = 0.0f;
+			for (auto&& vertice : cube.GetVertices())
+				if (float depth = 0.0f - vertice.y; depth > 0.0f)
+				{
+					colidedVerticeSum += vertice * depth;
+					depthFactor += depth;
+				}
+
+			if (depthFactor > 0.0f)
 			{
-				if (depth > depthFactor)
-				{
-					colisionCount = 1;
-					colidedVerticeSum = vertice;
-					depthFactor = depth;
-				}
-				else if (depth == depthFactor)
-				{
-					colisionCount++;
-					colidedVerticeSum += vertice;
-				}
+				const auto contactPoint = colidedVerticeSum / depthFactor;
+
+				NIC_ASSERT(contactPoint.y <= 0.0f, "Ponto de contato acima do chão");
+
+				cube.Colide(glm::vec3{ 0.0f, 1.0f, 0.0f }, contactPoint, -contactPoint.y);
 			}
 
-		if (colisionCount)
-		{
-			const auto contactPoint = colidedVerticeSum / float(colisionCount);
-			cube.Colide(glm::vec3{ 0.0f, 1.0f, 0.0f }, contactPoint, depthFactor);
+			cube.TransformLinearVelocity(glm::vec3{ 0.0f, c_G * dt ,0.0f });
+			cube.Update(dt);
+
 		}
-
-		cube.TransformLinearVelocity(glm::vec3{ 0.0f, c_G * dt ,0.0f });
-
-		cube.Update(dt);
-
-	}
 }
 
 void GameLayer::OnRender()

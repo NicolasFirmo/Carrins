@@ -9,6 +9,7 @@ class GameLayer
 public:
 	static constexpr float c_G = -9.8f;
 	static constexpr float c_ResThresh = 0.005f;
+	static float s_COR;
 
 public:
 	static GameLayer& Get();
