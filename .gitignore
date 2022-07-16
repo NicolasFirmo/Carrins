@@ -1,19 +1,9 @@
-# dirs
-DebugBuild/
-ReleaseBuild/
-.vscode/
-.vs/
-CMakeFiles/
-*.dir/
-**/Debug
-**/Release
+# Folders
+.vscode
+.vs
+build
+src/Assets
 
-# files
-/Assets
-*.cmake
+# Files
 imgui.ini
-*.vcxproj*
-/Carrins/*.pdb
-*.sln
-CMakeCache.txt
 Profile.json
