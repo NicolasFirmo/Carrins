@@ -60,8 +60,8 @@ void GameLayer::Init(float aspectRatio)
 
 	auto& cubes = Get().m_Cubes;
 
-	for (size_t i = 0; i < 100; i++)
-		for (size_t k = 0; k < 100; k++)
+	for (size_t i = 0; i < 142; i++)
+		for (size_t k = 0; k < 142; k++)
 			cubes.emplace_back(1.0f, 1.0f, 0.5f, 0.5f, 0.5f,
 				glm::vec3{ -float(nic::SQRT3) * k, 1.5f + 1.0f * (2 * k + i), -float(nic::SQRT3) * i }, glm::quat{ 1.0f,0.0f,0.0f,0.0f },
 				glm::vec3{ 0.0f, -0.1f, 0.0f }, glm::vec3{ 0.0f, 0.0f, 0.0f });
@@ -117,7 +117,7 @@ void GameLayer::OnUpdate(float dt)
 			{
 				const auto contactPoint = colidedVerticeSum / depthFactor;
 
-				NIC_ASSERT(contactPoint.y <= 0.0f, "Ponto de contato acima do chão");
+				NIC_ASSERT(contactPoint.y <= 0.0f, "Ponto de contato acima do chï¿½o");
 
 				cube.Colide(glm::vec3{ 0.0f, 1.0f, 0.0f }, contactPoint, -contactPoint.y, 1.0f);
 			}
