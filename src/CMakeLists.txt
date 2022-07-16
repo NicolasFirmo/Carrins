@@ -24,9 +24,12 @@ if(UNIX)
 	target_link_libraries(${PROJECT_NAME} PNG::PNG)
 endif(UNIX)
 if(WIN32)
-	target_include_directories(${PROJECT_NAME} PRIVATE Vendor/libpng/include)
-	target_link_directories(${PROJECT_NAME} PRIVATE Vendor/libpng/lib)
-	target_link_libraries(${PROJECT_NAME} "zlibstat$<$<CONFIG:Debug>:d>.lib" "libpng$<$<CONFIG:Debug>:d>.lib")
+	target_include_directories(${PROJECT_NAME} PRIVATE 
+		${CMAKE_SOURCE_DIR}/vendor/libpng/include)
+	target_link_directories(${PROJECT_NAME} PRIVATE 
+		${CMAKE_SOURCE_DIR}/vendor/libpng/lib)
+	target_link_libraries(${PROJECT_NAME}
+		"zlibstat$<$<CONFIG:Debug>:d>.lib" "libpng$<$<CONFIG:Debug>:d>.lib")
 endif(WIN32)
 
 target_link_libraries(${PROJECT_NAME} glad)
