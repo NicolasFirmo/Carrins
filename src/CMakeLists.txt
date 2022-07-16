@@ -45,10 +45,10 @@ endif(UNIX)
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "(Clang|GNU)")
 	target_compile_options(${PROJECT_NAME} PRIVATE
-	"$<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wextra;-Wpedantic;-Wconversion;-fno-exceptions;$<$<CONFIG:RELEASE>:-O3;-ffast-math;-fno-rtti>>")
+	"$<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wextra;-Wpedantic;-Wconversion;-fno-exceptions;$<$<CONFIG:RELEASE>:-O3;-ffast-math>>")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 	target_compile_options(${PROJECT_NAME} PRIVATE
-		"$<$<COMPILE_LANGUAGE:CXX>:/Wall;/MP;/Oi;/GL;$<$<CONFIG:RELEASE>:/Ot;/fp:fast;/GR->>")
+		"$<$<COMPILE_LANGUAGE:CXX>:/Wall;/MP;/Oi;/GL;$<$<CONFIG:RELEASE>:/Ot;/fp:fast;>>")
 	set_target_properties(${PROJECT_NAME} PROPERTIES MSVC_RUNTIME_LIBRARY
 		"MultiThreaded$<$<CONFIG:Debug>:Debug>")
 	set_target_properties(glad PROPERTIES MSVC_RUNTIME_LIBRARY
